@@ -4,8 +4,11 @@ Układ repo: korzeń = aplikacja Next (dawne `audit/mailer-ui`), `mailer/` = CLI
 `benchmarks/` = dane v0.4 (tylko odczyt). Lokalnie w `audit/` są dowiązania `mailer` i `mailer-ui` → tu, a `AUDIT_ROOT`
 w `mailer/.env` wskazuje na `audit/` (customers/, benchmarks/). Vercel: projekt `appsynth-mailer`, domena
 `mailer.appsynth.pl`, deploy z CLI `npx vercel deploy --prod` (albo z GitHuba po podpięciu repo); `.vercelignore`
-trzyma sekrety i dane klientów poza wysyłką. Na Vercelu: klienci/uploady niezapisywane, log w Vercel Blob
-(`mailer-store`, `mailer-log/<klient>.txt`), załączniki z przeglądarki idą w pamięci z wysyłką.
+trzyma sekrety i dane klientów poza wysyłką. Rekordy klientów i log wysyłek: **Vercel Blob** `mailer-eu` (prywatny, region fra1/UE) — to samo źródło lokalnie
+i na Vercelu, gdy w `.env.local` jest `BLOB_READ_WRITE_TOKEN` (`npx vercel env pull .env.local --environment development`).
+Klucze: `clients/<domena>.json`, `mailer-log/<domena>.txt`. Lokalny `mailer/clients/` to kopia: `npm run clients:pull`
+(Blob → pliki) / `npm run clients:push` (pliki → Blob). Bez tokenu panel pracuje na plikach (offline).
+Załączniki z przeglądarki idą w pamięci z wysyłką; pliki z `customers/` tylko lokalnie. Decyzja 2026-09-11.
 
 # mailer-ui — panel do `mailer/`
 

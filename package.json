@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start -p 1213",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "clients:pull": "tsx scripts/sync-clients.mts pull",
+    "clients:push": "tsx scripts/sync-clients.mts push"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.9.2",
@@ -28,6 +30,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.4",
+    "tsx": "^4.23.13",
     "typescript": "^5"
   },
   "description": "AppSynth mailer UI — podgląd, edycja vars i wysyłka szablonów z audit/mailer (lokalnie, port 1213)"

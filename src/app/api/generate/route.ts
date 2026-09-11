@@ -9,8 +9,8 @@ export async function POST(req: Request) {
     const { host } = (await req.json()) as { host: string };
     const { record, notes } = generateClient(host);
     const id = record.customer;
-    if (clientExists(id)) return ok({ id, record: readClient(id), notes: [`Klient ${id} już istnieje — wczytano istniejący rekord`], existed: true });
-    writeClient(id, record);
+    if (await clientExists(id)) return ok({ id, record: await readClient(id), notes: [`Klient ${id} już istnieje — wczytano istniejący rekord`], existed: true });
+    await writeClient(id, record);
     return ok({ id, record, notes, existed: false });
   } catch (e) { return fail(e); }
 }

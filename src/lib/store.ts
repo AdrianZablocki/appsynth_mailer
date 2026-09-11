@@ -59,7 +59,44 @@ export function readDefaults(): Defaults {
 
 const clientsDir = () => resolve(MAILER_ROOT, 'clients');
 
-export function listClients(): { id: string; customer: string; firma: string; mtime: number }[] {
+/*
+ Rekordy klientów: Vercel Blob (prywatny store `mailer-eu`, region fra1), gdy jest BLOB_READ_WRITE_TOKEN —
+ lokalnie i na Vercelu to samo źródło. Bez tokenu: pliki mailer/clients/<id>.json (tryb offline).
+ Lokalny folder clients/ jest KOPIĄ: `npm run clients:pull` / `clients:push` (scripts/sync-clients.mts).
+*/
+export const USE_BLOB = !!process.env.BLOB_READ_WRITE_TOKEN;
+const blobKey = (id: string) => `clients/${safeName(id)}.json`;
+
+async function blobGetText(pathname: string): Promise<string | null> {
+  const { get } = await import('@vercel/blob');
+  const r = await get(pathname, { access: 'private', useCache: false });
+  if (!r || r.statusCode !== 200 || !r.stream) return null;
+  return new Response(r.stream).text();
+}
+async function blobPutText(pathname: string, text: string, contentType: string) {
+  const { put } = await import('@vercel/blob');
+  await put(pathname, text, { access: 'private', addRandomSuffix: false, allowOverwrite: true, contentType });
+}
+
+export async function listClients(): Promise<{ id: string; customer: string; firma: string; mtime: number }[]> {
+  if (USE_BLOB) {
+    const { list } = await import('@vercel/blob');
+    const out: { id: string; customer: string; firma: string; mtime: number }[] = [];
+    let cursor: string | undefined;
+    do {
+      const page = await list({ prefix: 'clients/', cursor, limit: 500 });
+      for (const b of page.blobs) {
+        const id = b.pathname.replace(/^clients\//, '').replace(/\.json$/, '');
+        out.push({ id, customer: id, firma: '', mtime: new Date(b.uploadedAt).getTime() });
+      }
+      cursor = page.hasMore ? page.cursor : undefined;
+    } while (cursor);
+    // FIRMA do listy: rekordy są małe, pobieramy równolegle
+    await Promise.all(out.map(async (row) => {
+      try { const r = JSON.parse((await blobGetText(blobKey(row.id))) ?? '{}') as ClientRecord; row.customer = r.customer ?? row.id; row.firma = typeof r.FIRMA === 'string' ? r.FIRMA : ''; } catch { /* zepsuty json */ }
+    }));
+    return out.sort((a, b) => b.mtime - a.mtime);
+  }
   if (READ_ONLY) return [];
   mkdirSync(clientsDir(), { recursive: true });
   return readdirSync(clientsDir())
@@ -74,18 +111,26 @@ export function listClients(): { id: string; customer: string; firma: string; mt
     .sort((a, b) => b.mtime - a.mtime);
 }
 
-export function readClient(id: string): ClientRecord {
+export async function readClient(id: string): Promise<ClientRecord> {
+  if (USE_BLOB) {
+    const t = await blobGetText(blobKey(id));
+    if (t == null) throw new Error(`Brak klienta ${id}`);
+    return JSON.parse(t) as ClientRecord;
+  }
   return JSON.parse(readFileSync(resolve(clientsDir(), `${safeName(id)}.json`), 'utf8'));
 }
 
-export function clientExists(id: string): boolean {
+export async function clientExists(id: string): Promise<boolean> {
+  if (USE_BLOB) return (await blobGetText(blobKey(id))) != null;
   return existsSync(resolve(clientsDir(), `${safeName(id)}.json`));
 }
 
-export function writeClient(id: string, record: ClientRecord) {
-  if (READ_ONLY) throw new Error('Na Vercelu rekordy klientów nie są zapisywane (decyzja: dane klientów zostają lokalnie)');
+export async function writeClient(id: string, record: ClientRecord): Promise<void> {
+  const text = JSON.stringify(record, null, 2) + '\n';
+  if (USE_BLOB) { await blobPutText(blobKey(id), text, 'application/json; charset=utf-8'); return; }
+  if (READ_ONLY) throw new Error('Brak BLOB_READ_WRITE_TOKEN — na Vercelu rekordy klientów wymagają Vercel Blob');
   mkdirSync(clientsDir(), { recursive: true });
-  writeFileSync(resolve(clientsDir(), `${safeName(id)}.json`), JSON.stringify(record, null, 2) + '\n');
+  writeFileSync(resolve(clientsDir(), `${safeName(id)}.json`), text);
 }
 
 export function writeOut(name: string, html: string): string {
@@ -126,16 +171,12 @@ export function listCustomerFiles(customer: string): string[] {
 /** Log wysyłek: lokalnie plik w folderze klienta; na Vercelu Vercel Blob (`mailer-log/<klient>.txt`), jeśli jest BLOB_READ_WRITE_TOKEN. */
 export async function appendLog(customer: string, line: string): Promise<void> {
   const text = line.endsWith('\n') ? line : line + '\n';
-  if (READ_ONLY) {
-    if (!process.env.BLOB_READ_WRITE_TOKEN) return;
-    const { put, list } = await import('@vercel/blob');
+  if (USE_BLOB) {
     const key = `mailer-log/${safeName(customer || 'bez-klienta')}.txt`;
-    let prev = '';
-    const existing = (await list({ prefix: key, limit: 1 })).blobs.find((b) => b.pathname === key);
-    if (existing) prev = await (await fetch(existing.downloadUrl)).text();
-    await put(key, prev + text, { access: 'private', addRandomSuffix: false, allowOverwrite: true, contentType: 'text/plain; charset=utf-8' });
-    return;
-  }
+    const prev = (await blobGetText(key)) ?? '';
+    await blobPutText(key, prev + text, 'text/plain; charset=utf-8');
+    if (READ_ONLY) return; // lokalnie dopisujemy też do pliku klienta (kopia)
+  } else if (READ_ONLY) return;
   const dir = resolve(AUDIT_ROOT, 'customers', safeName(customer));
   const target = existsSync(dir) ? resolve(dir, 'mailer-log.txt') : resolve(MAILER_ROOT, 'out', 'mailer-log.txt');
   mkdirSync(resolve(MAILER_ROOT, 'out'), { recursive: true });
@@ -143,13 +184,11 @@ export async function appendLog(customer: string, line: string): Promise<void> {
 }
 
 export async function readLog(customer: string): Promise<string[]> {
-  if (READ_ONLY) {
-    if (!process.env.BLOB_READ_WRITE_TOKEN || !customer) return [];
-    const { list } = await import('@vercel/blob');
-    const key = `mailer-log/${safeName(customer)}.txt`;
-    const existing = (await list({ prefix: key, limit: 1 })).blobs.find((b) => b.pathname === key);
-    return existing ? (await (await fetch(existing.downloadUrl)).text()).split('\n').filter(Boolean) : [];
-  }
+  if (USE_BLOB && customer) {
+    const t = await blobGetText(`mailer-log/${safeName(customer)}.txt`);
+    if (t != null) return t.split('\n').filter(Boolean);
+    if (READ_ONLY) return [];
+  } else if (READ_ONLY) return [];
   const p = resolve(AUDIT_ROOT, 'customers', safeName(customer), 'mailer-log.txt');
   if (!existsSync(p)) return [];
   return readFileSync(p, 'utf8').split('\n').filter(Boolean);

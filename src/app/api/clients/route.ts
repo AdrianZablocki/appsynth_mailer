@@ -7,7 +7,7 @@ export async function GET(req: Request) {
   const denied = await guard(); if (denied) return denied;
   try {
     const id = new URL(req.url).searchParams.get('id');
-    return ok(id ? { id, record: readClient(id) } : listClients());
+    return ok(id ? { id, record: await readClient(id) } : await listClients());
   } catch (e) { return fail(e); }
 }
 
@@ -17,8 +17,8 @@ export async function PUT(req: Request) {
   try {
     const { id, record, create } = (await req.json()) as { id: string; record: ClientRecord; create?: boolean };
     if (!id || !record?.customer) throw new Error('Podaj id i record.customer');
-    if (create && clientExists(id)) return fail(`Klient ${id} już istnieje`, 409);
-    writeClient(id, record);
+    if (create && (await clientExists(id))) return fail(`Klient ${id} już istnieje`, 409);
+    await writeClient(id, record);
     return ok({ saved: id });
   } catch (e) { return fail(e); }
 }
