@@ -1,4 +1,13 @@
-# mailer-ui — panel do `audit/mailer`
+# appsynth_mailer — panel (Next.js) + CLI do wysyłki maili AppSynth
+
+Układ repo: korzeń = aplikacja Next (dawne `audit/mailer-ui`), `mailer/` = CLI + szablony + `defaults.json`,
+`benchmarks/` = dane v0.4 (tylko odczyt). Lokalnie w `audit/` są dowiązania `mailer` i `mailer-ui` → tu, a `AUDIT_ROOT`
+w `mailer/.env` wskazuje na `audit/` (customers/, benchmarks/). Vercel: projekt `appsynth-mailer`, domena
+`mailer.appsynth.pl`, deploy z CLI `npx vercel deploy --prod` (albo z GitHuba po podpięciu repo); `.vercelignore`
+trzyma sekrety i dane klientów poza wysyłką. Na Vercelu: klienci/uploady niezapisywane, log w Vercel Blob
+(`mailer-store`, `mailer-log/<klient>.txt`), załączniki z przeglądarki idą w pamięci z wysyłką.
+
+# mailer-ui — panel do `mailer/`
 
 Lokalny interfejs (Next.js) nad narzędziem `../mailer`: rekordy klientów, podgląd szablonu z danymi klienta,
 nowy klient z benchmarku v0.4, wysyłka testowa i do klienta. Korzysta z tych samych plików co CLI
