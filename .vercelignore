@@ -1,0 +1,11 @@
+# deploy z CLI wysyła katalog roboczy — sekrety i dane klientów zostają lokalnie
+.env
+.env.*
+mailer/.env
+mailer/clients
+mailer/vars-legacy
+mailer/out
+mailer/uploads
+mailer/node_modules
+node_modules
+.next
