@@ -2,7 +2,7 @@
  Jedyny moduł, który dotyka dysku. Przy przenosinach na Vercel podmienić ten plik
  (Vercel Blob / KV) — reszta aplikacji zna tylko te funkcje.
 */
-import { readFileSync, writeFileSync, readdirSync, existsSync, appendFileSync, mkdirSync, statSync } from 'node:fs';
+import { readFileSync, writeFileSync, readdirSync, existsSync, appendFileSync, mkdirSync, statSync, unlinkSync } from 'node:fs';
 import { resolve, join, relative } from 'node:path';
 import { config as loadEnv } from 'dotenv';
 
@@ -131,6 +131,14 @@ export async function writeClient(id: string, record: ClientRecord): Promise<voi
   if (READ_ONLY) throw new Error('Brak BLOB_READ_WRITE_TOKEN — na Vercelu rekordy klientów wymagają Vercel Blob');
   mkdirSync(clientsDir(), { recursive: true });
   writeFileSync(resolve(clientsDir(), `${safeName(id)}.json`), text);
+}
+
+/** Usuwa rekord klienta (Blob albo plik). Log wysyłek zostaje jako ślad. */
+export async function deleteClient(id: string): Promise<void> {
+  if (USE_BLOB) { const { del } = await import('@vercel/blob'); await del(blobKey(id)); return; }
+  if (READ_ONLY) throw new Error('Brak BLOB_READ_WRITE_TOKEN');
+  const p = resolve(clientsDir(), `${safeName(id)}.json`);
+  if (existsSync(p)) unlinkSync(p);
 }
 
 export function writeOut(name: string, html: string): string {

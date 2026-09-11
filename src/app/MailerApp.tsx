@@ -125,6 +125,34 @@ export default function MailerApp() {
     } catch (e) { setNotice({ kind: 'err', text: (e as Error).message }); }
   };
 
+  /** Nowy klient „z palca”: rekord z domeną i pustymi polami wszystkich szablonów. */
+  const createManual = async () => {
+    const raw = prompt('Domena klienta (np. firma.no) — będzie identyfikatorem rekordu:');
+    if (!raw) return;
+    const host = raw.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '');
+    if (!/^[a-z0-9.-]+\.[a-z]{2,}$/.test(host)) { setNotice({ kind: 'err', text: `To nie wygląda na domenę: ${raw}` }); return; }
+    const record: ClientRecord = { customer: host, to: '', 'firma.no': host, 'company.no': host, templates: {}, notes: '' };
+    for (const t of templates) for (const k of t.placeholders) if (!(k in record) && !defaults[t.name]?.[k]) record[k] = '';
+    try {
+      await api('/api/clients', { method: 'PUT', body: JSON.stringify({ id: host, record, create: true }) });
+      setClients(await api<ClientRow[]>('/api/clients'));
+      setClientId(host); setClient(record); setDirty(false); setToOverride('');
+      setNotice({ kind: 'ok', text: `Utworzono klienta ${host} — wypełnij pola i zapisz` });
+    } catch (e) { setNotice({ kind: 'err', text: (e as Error).message }); }
+  };
+
+  const removeClient = async () => {
+    if (!clientId) return;
+    const typed = prompt(`Usunąć klienta ${clientId} z bazy? Historia wysyłek zostaje. Wpisz domenę, żeby potwierdzić:`);
+    if (!typed || typed.trim().toLowerCase() !== clientId.toLowerCase()) return;
+    try {
+      await api(`/api/clients?id=${encodeURIComponent(clientId)}`, { method: 'DELETE' });
+      setClients(await api<ClientRow[]>('/api/clients'));
+      setClientId(''); setClient(null); setDirty(false); setRendered(null);
+      setNotice({ kind: 'ok', text: `Usunięto klienta ${clientId}` });
+    } catch (e) { setNotice({ kind: 'err', text: (e as Error).message }); }
+  };
+
   const addUpload = (file: File | undefined) => {
     if (!file) return;
     if (!/\.(pdf|png|jpe?g)$/i.test(file.name)) { setNotice({ kind: 'err', text: 'Dozwolone tylko PDF, PNG i JPG' }); return; }
@@ -191,8 +219,9 @@ export default function MailerApp() {
               <span>{c.customer}{c.firma && <><br /><small>{c.firma}</small></>}</span><small>{new Date(c.mtime).toLocaleDateString('pl-PL')}</small>
             </button>
           ))}
-          {clients.length === 0 && <span className="muted">brak rekordów w mailer/clients</span>}
+          {clients.length === 0 && <span className="muted">brak klientów</span>}
         </div>
+        <button className="btn" style={{ marginTop: 8 }} onClick={createManual}>+ Nowy klient ręcznie</button>
 
         <h2>Nowy klient z benchmarku</h2>
         {!showBench ? (
@@ -228,6 +257,7 @@ export default function MailerApp() {
         <div className="row" style={{ marginBottom: 12 }}>
           <strong className="grow">{clientId ? `clients/${clientId}.json` : 'wybierz klienta albo firmę z benchmarku'}{dirty && ' *'}</strong>
           <button className="btn" disabled={!dirty || !client} onClick={save}>Zapisz</button>
+          {clientId && <button className="btn" title="Usuń rekord klienta (historia wysyłek zostaje)" onClick={removeClient}>Usuń</button>}
         </div>
 
         {client && (
