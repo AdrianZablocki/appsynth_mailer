@@ -23,7 +23,7 @@ Cała apka i API tylko dla zalogowanych. Dwie warstwy: `src/proxy.ts` (sesja alb
 `src/lib/api.ts` w każdej trasie API i `auth.protect()` na stronie głównej. Rejestracji w apce nie ma — kto może się
 zalogować, decyduje **allowlista na instancji Clerka** (kod na maila albo Google). Klucze w `.env.local` (gitignore),
 aplikacja Clerk `app_3JBL23l2J2NZjeDVj3pi3FBO3YY`. Nowy adres: `clerk api /allowlist_identifiers -d '{"identifier":"x@y"}'`.
-Ta sama aplikacja Clerk ma docelowo obsłużyć też `faktury/`.
+Ta sama aplikacja Clerk obsługuje też `appsynth_invoice/` (invoice.appsynth.pl).
 
 ## Model danych (od 2026-09-11)
 
