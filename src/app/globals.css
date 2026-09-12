@@ -21,6 +21,9 @@ h2:first-child { margin-top: 0; }
 label.field { display: block; margin-bottom: 10px; }
 label.field > span { display: block; font-size: 12px; color: var(--muted); margin-bottom: 3px; word-break: break-word; }
 label.field.empty > span { color: var(--warn); }
+label.field > span > b.pl { display: block; font-weight: 600; color: var(--text); font-size: 13px; }
+label.field.empty > span > b.pl { color: var(--warn); }
+label.field > span > code { font-size: 11px; opacity: .85; }
 input[type=text], select, textarea { width: 100%; padding: 7px 9px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
 input[type=text]:focus, select:focus, textarea:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
 textarea { resize: vertical; min-height: 56px; }

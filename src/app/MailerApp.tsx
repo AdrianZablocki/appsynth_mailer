@@ -13,6 +13,48 @@ type Notice = { kind: 'ok' | 'warn' | 'err'; text: string } | null;
 
 const META = ['customer', 'subject', 'to']; // 'from' ma selekt w nagłówku, 'attachments' własną sekcję
 
+// Polskie opisy pól nad inputami. Klucz = placeholder z szablonu (bez nawiasów) albo pole meta.
+const PL_LABELS: Record<string, string> = {
+  customer: 'Klient (domena, identyfikator rekordu)',
+  subject: 'Temat wiadomości',
+  to: 'Adres e-mail odbiorcy',
+  FORNAVN: 'Imię odbiorcy (wersja norweska)',
+  'FIRST NAME': 'Imię odbiorcy (wersja angielska)',
+  FIRMA: 'Nazwa firmy (wersja norweska)',
+  COMPANY: 'Nazwa firmy (wersja angielska)',
+  'firma.no': 'Domena firmy (wersja norweska)',
+  'company.no': 'Domena firmy (wersja angielska)',
+  TJENESTE: 'Usługa, o którą pytaliśmy AI (po norwesku, np. rørleggerarbeid)',
+  SERVICE: 'Usługa, o którą pytaliśmy AI (po angielsku, np. plumbing work)',
+  BY: 'Miasto (wersja norweska)',
+  CITY: 'Miasto (wersja angielska)',
+  BRANSJE: 'Branża w liczbie mnogiej (po norwesku, np. rørleggere)',
+  '57': 'Wynik firmy w benchmarku (punkty na 100)',
+  '70': 'Mediana branży w benchmarku (punkty na 100)',
+  'AI OBSERVATION': 'Obserwacja z odpowiedzi AI (wersja angielska)',
+  'FØRSTE ADRESSE': 'Adres, na który poszedł pierwszy mail (wersja norweska)',
+  'FIRST ADDRESS': 'Adres, na który poszedł pierwszy mail (wersja angielska)',
+  FORESLÅTT_TID: 'Proponowany termin rozmowy (po norwesku)',
+  FORESLÅTT_TID_EN: 'Proponowany termin rozmowy (po angielsku)',
+  GYLDIG_TIL: 'Oferta ważna do (data po norwesku)',
+  PRIS_AUDIT: 'Cena audytu (NOK, bez VAT)',
+  PRIS_PAKKE: 'Cena pakietu wdrożeniowego (NOK, bez VAT)',
+  PRIS_MND: 'Cena abonamentu miesięcznego (NOK, bez VAT)',
+  RAPPORT_FIL: 'Nazwa pliku raportu PDF (jak w załączniku)',
+  TILBUD_FIL: 'Nazwa pliku oferty PDF (jak w załączniku)',
+  TABELL_TITTEL: 'Tytuł tabeli z cenami (po norwesku)',
+};
+function plLabel(k: string): string | undefined {
+  if (PL_LABELS[k]) return PL_LABELS[k];
+  let m: RegExpMatchArray | null;
+  if ((m = k.match(/^KONKURRENT (\d+)$/))) return `Konkurent nr ${m[1]} wskazany przez AI (wersja norweska)`;
+  if ((m = k.match(/^COMPETITOR (\d+)$/))) return `Konkurent nr ${m[1]} wskazany przez AI (wersja angielska)`;
+  if ((m = k.match(/^FUNN (\d+)$/))) return `Ustalenie nr ${m[1]}: brak na stronie (po norwesku, krótko)`;
+  if ((m = k.match(/^FINDING (\d+)$/))) return `Ustalenie nr ${m[1]}: brak na stronie (po angielsku, krótko)`;
+  if (k.startsWith('OBSERVASJON FRA AI')) return 'Obserwacja z odpowiedzi AI (wersja norweska)';
+  return undefined;
+}
+
 async function api<T>(url: string, init?: RequestInit): Promise<T> {
   const r = await fetch(url, { ...init, headers: { 'content-type': 'application/json', ...(init?.headers ?? {}) } });
   const j = await r.json();
@@ -265,7 +307,7 @@ export default function MailerApp() {
             <h2>Meta</h2>
             {META.map((k) => (
               <label key={k} className={`field ${!str(vars[k]) ? 'empty' : ''}`}>
-                <span>{k}{k === 'to' && ' (adres klienta)'}{scoped(k) && <em className="muted"> · dla szablonu {template}</em>}</span>
+                <span>{plLabel(k) && <b className="pl">{plLabel(k)}</b>}<code>{k}</code>{scoped(k) && <em className="muted"> · dla szablonu {template}</em>}</span>
                 <input type="text" value={str(vars[k])} onChange={(e) => setField(k, e.target.value)} readOnly={k === 'customer'} />
               </label>
             ))}
@@ -273,7 +315,7 @@ export default function MailerApp() {
             <h2>Pola szablonu „{template}”</h2>
             {fieldKeys.map((k) => (
               <label key={k} className={`field ${!str(vars[k]) ? 'empty' : ''}`} title={unusedKeys.has(k) ? 'klucz nieużywany w tym szablonie' : undefined}>
-                <span>[{k}]{scoped(k) && <em className="muted"> · dla szablonu {template}</em>}{unusedKeys.has(k) && <em className="muted"> · nieużywane w tym szablonie</em>}</span>
+                <span>{plLabel(k) && <b className="pl">{plLabel(k)}</b>}<code>[{k}]</code>{scoped(k) && <em className="muted"> · dla szablonu {template}</em>}{unusedKeys.has(k) && <em className="muted"> · nieużywane w tym szablonie</em>}</span>
                 {isLong(k)
                   ? <textarea value={str(vars[k])} onChange={(e) => setField(k, e.target.value)} />
                   : <input type="text" value={str(vars[k])} onChange={(e) => setField(k, e.target.value)} />}
