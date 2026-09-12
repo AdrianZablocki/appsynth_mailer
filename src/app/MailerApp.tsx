@@ -43,6 +43,10 @@ const PL_LABELS: Record<string, string> = {
   RAPPORT_FIL: 'Nazwa pliku raportu PDF (jak w załączniku)',
   TILBUD_FIL: 'Nazwa pliku oferty PDF (jak w załączniku)',
   TABELL_TITTEL: 'Tytuł tabeli z cenami (po norwesku)',
+  PLASS: 'Pozycja firmy na liście AI (po norwesku, np. «sist, som nr. 5 av 5») — szablon cold-mail-listed',
+  PLACE: 'Pozycja firmy na liście AI (po angielsku, np. «last, 5th of 5») — szablon cold-mail-listed',
+  'AI KOMMENTAR': 'Zastrzeżenie AI przy firmie, cytat (po norwesku, np. «svært gode vurderinger, men foreløpig få anmeldelser»)',
+  'AI REMARK': 'Zastrzeżenie AI przy firmie, cytat (po angielsku)',
 };
 function plLabel(k: string): string | undefined {
   if (PL_LABELS[k]) return PL_LABELS[k];

@@ -3,6 +3,11 @@
   "cold-mail": {
     "subject": "Vi spurte AI hvem den anbefaler for [TJENESTE] i [BY]. [FIRMA] var ikke på listen."
   },
+  "cold-mail-listed": {
+    "subject": "Vi spurte AI hvem den anbefaler for [TJENESTE] i [BY]. [FIRMA] kom sist på listen.",
+    "PLASS": "sist på listen",
+    "PLACE": "last on the list"
+  },
   "follow-up": {
     "subject": "Re: Vi spurte AI hvem den anbefaler for [TJENESTE] i [BY]"
   },
