@@ -52,7 +52,7 @@ Imię, adres, konkurentów i obserwację AI uzupełniasz po ręcznych testach G.
 
 Nadawca: selekt „od:” w nagłówku wybiera alias skrzynki z `FROM_ADDRESSES` w `mailer/.env`
 (`Nazwa <adres>, Nazwa <adres>`; pierwszy = domyślny). Wybór zapisuje się w rekordzie jako `from`
-(`--from` nadpisuje). Adres poza listą jest odrzucany. Logowanie SMTP/IMAP zawsze tym samym kontem —
+Adres poza listą jest odrzucany. Logowanie SMTP/IMAP zawsze tym samym kontem —
 sylwia@ jest aliasem skrzynki kontakt@.
 
 Załączniki: checkboxy pokazują PDF/PNG z `customers/<domena>/` (bez `evidence/`) oraz `mailer/uploads/`.
