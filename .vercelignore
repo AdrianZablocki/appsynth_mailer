@@ -3,9 +3,6 @@
 .env.*
 mailer/.env
 mailer/clients
-mailer/vars-legacy
-mailer/out
 mailer/uploads
-mailer/node_modules
 node_modules
 .next

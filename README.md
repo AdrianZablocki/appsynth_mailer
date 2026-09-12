@@ -1,7 +1,8 @@
-# appsynth_mailer — panel (Next.js) + CLI do wysyłki maili AppSynth
+# appsynth_mailer — panel (Next.js) do wysyłki maili AppSynth
 
-Układ repo: korzeń = aplikacja Next (dawne `audit/mailer-ui`), `mailer/` = CLI + szablony + `defaults.json`,
-`benchmarks/` = dane v0.4 (tylko odczyt). Lokalnie w `audit/` są dowiązania `mailer` i `mailer-ui` → tu, a `AUDIT_ROOT`
+Układ repo: korzeń = aplikacja Next (dawne `audit/mailer-ui`), `mailer/` = dane panelu: szablony HTML, `defaults.json`,
+`.env` (SMTP/IMAP), lokalna kopia `clients/`; `benchmarks/` = dane v0.4 (tylko odczyt). Dawny CLI `mailer/src/send.ts` usunięty
+2026-09-12 — panel robi to samo (wysyłka, IMAP „Wysłane”, log). Lokalnie w `audit/` jest dowiązanie `mailer` → `mailer/`, a `AUDIT_ROOT`
 w `mailer/.env` wskazuje na `audit/` (customers/, benchmarks/). Vercel: projekt `appsynth-mailer`, domena
 `mailer.appsynth.pl`, deploy z CLI `npx vercel deploy --prod` (albo z GitHuba po podpięciu repo); `.vercelignore`
 trzyma sekrety i dane klientów poza wysyłką. Rekordy klientów i log wysyłek: **Vercel Blob** `mailer-eu` (prywatny, region fra1/UE) — to samo źródło lokalnie
@@ -10,11 +11,11 @@ Klucze: `clients/<domena>.json`, `mailer-log/<domena>.txt`. Lokalny `mailer/clie
 (Blob → pliki) / `npm run clients:push` (pliki → Blob). Bez tokenu panel pracuje na plikach (offline).
 Załączniki z przeglądarki idą w pamięci z wysyłką; pliki z `customers/` tylko lokalnie. Decyzja 2026-09-11.
 
-# mailer-ui — panel do `mailer/`
+# Panel
 
-Lokalny interfejs (Next.js) nad narzędziem `../mailer`: rekordy klientów, podgląd szablonu z danymi klienta,
-nowy klient z benchmarku v0.4, wysyłka testowa i do klienta. Korzysta z tych samych plików co CLI
-(`../mailer/templates`, `../mailer/clients`, `../mailer/defaults.json`, `../mailer/.env`, `../customers/<domena>/`).
+Interfejs (Next.js) nad danymi w `mailer/`: rekordy klientów, podgląd szablonu z danymi klienta,
+nowy klient z benchmarku v0.4, wysyłka testowa i do klienta. Pliki: `mailer/templates`, `mailer/clients`,
+`mailer/defaults.json`, `mailer/.env`, `${AUDIT_ROOT}/customers/<domena>/` (załączniki lokalnie).
 
 ## Logowanie (Clerk, od 2026-09-11)
 
@@ -31,15 +32,14 @@ Ta sama aplikacja Clerk ma docelowo obsłużyć też `faktury/`.
   pola typu `GYLDIG_TIL`). Przepływ cold mail → follow-up → oferta to jeden rekord, trzy szablony.
 - **`mailer/defaults.json`** — wartości domyślne per szablon (tematy z `[PLACEHOLDERAMI]`, ceny oferty).
 - Skuteczne vars dla szablonu = `defaults[szablon]` < rekord < `rekord.templates[szablon]` (`src/lib/effective.ts`,
-  ta sama logika w CLI). W formularzu pola „dla szablonu X” zapisują się do sekcji `templates`, reszta do rekordu.
-- Stare pliki `vars/` przeniesione do `mailer/vars-legacy/` (CLI: `--vars` nadal je czyta).
+  ). W formularzu pola „dla szablonu X” zapisują się do sekcji `templates`, reszta do rekordu.
 
 ```
 npm install
 npm run dev        # http://localhost:1213
 ```
 
-Zasady (te same co w CLI):
+Zasady:
 - „Wyślij test” idzie wyłącznie na `TEST_TO` z `mailer/.env`, temat z prefiksem `[TEST]`, bez logu.
 - „Wyślij do klienta” wymaga wpisania domeny klienta w oknie potwierdzenia (odpowiednik `--really`),
   zapisuje kopię do IMAP „Wysłane” i dopisuje linię do `customers/<domena>/mailer-log.txt`.
@@ -51,7 +51,7 @@ branżą, wynikiem, medianą branży i 3 najkosztowniejszymi niezaliczonymi chec
 Imię, adres, konkurentów i obserwację AI uzupełniasz po ręcznych testach G.
 
 Nadawca: selekt „od:” w nagłówku wybiera alias skrzynki z `FROM_ADDRESSES` w `mailer/.env`
-(`Nazwa <adres>, Nazwa <adres>`; pierwszy = domyślny). Wybór zapisuje się w vars jako `from`, CLI czyta to samo
+(`Nazwa <adres>, Nazwa <adres>`; pierwszy = domyślny). Wybór zapisuje się w rekordzie jako `from`
 (`--from` nadpisuje). Adres poza listą jest odrzucany. Logowanie SMTP/IMAP zawsze tym samym kontem —
 sylwia@ jest aliasem skrzynki kontakt@.
 

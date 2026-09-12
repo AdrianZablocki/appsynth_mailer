@@ -40,10 +40,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# mailer (CLI) — dane klientów i sekrety zostają lokalnie (decyzja 2026-09-11)
-mailer/node_modules/
+# mailer/ (dane panelu) — sekrety i rekordy klientów zostają lokalnie (decyzja 2026-09-11)
 mailer/.env
-mailer/out/
 mailer/uploads/
 mailer/clients/
-mailer/vars-legacy/

@@ -8,8 +8,8 @@ import { config as loadEnv } from 'dotenv';
 
 
 /*
- Układ repo (appsynth_mailer): korzeń = ta apka Next, `mailer/` (szablony, defaults, CLI) i `benchmarks/` obok.
- Lokalnie w audit/ są dowiązania: audit/mailer-ui → repo, audit/mailer → repo/mailer; AUDIT_ROOT w mailer/.env
+ Układ repo (appsynth_mailer): korzeń = ta apka Next, `mailer/` (szablony, defaults, .env, kopia clients/) i `benchmarks/` obok.
+ Lokalnie w audit/ jest dowiązanie audit/mailer → repo/mailer; AUDIT_ROOT w mailer/.env
  wskazuje na audit/ (customers/, benchmarks/). Na Vercelu AUDIT_ROOT = korzeń repo (benchmarks/ w repo, customers/ brak).
 */
 function firstExisting(cands: string[], probe: string): string {
@@ -149,7 +149,7 @@ export function writeOut(name: string, html: string): string {
   return p;
 }
 
-/** Ścieżka załącznika względem katalogu audit (tak jak w CLI). */
+/** Ścieżka załącznika względem katalogu audit. */
 export function attachmentPath(rel: string): string {
   const p = resolve(AUDIT_ROOT, rel);
   if (!p.startsWith(AUDIT_ROOT + '/')) throw new Error(`Załącznik poza katalogiem audit: ${rel}`);
