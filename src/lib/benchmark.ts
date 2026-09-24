@@ -48,13 +48,14 @@ const FINDINGS: Record<string, { nb: string; en: string }> = {
   F7: { nb: 'domene uten www (bare www virker)', en: 'the bare domain (only www works)' },
 };
 
-let cache: { rows: BenchRow[]; records: Map<string, Record_ & { branch: Branch }>; medians: Record<Branch, number> } | null = null;
+let cache: { rows: BenchRow[]; records: Map<string, Record_ & { branch: Branch }>; medians: Record<Branch, number>; counts: Record<Branch, number> } | null = null;
 
 function load() {
   if (cache) return cache;
   const rows: BenchRow[] = [];
   const records = new Map<string, Record_ & { branch: Branch }>();
   const medians = { rorleggere: 0, elektrikere: 0 } as Record<Branch, number>;
+  const counts = { rorleggere: 0, elektrikere: 0 } as Record<Branch, number>; // firmy z wynikiem (bez nieosiągalnych)
   for (const { branch, lines } of readBenchmarkFiles()) {
     const scores: number[] = [];
     for (const l of lines) {
@@ -71,9 +72,10 @@ function load() {
     }
     scores.sort((a, b) => a - b);
     medians[branch] = scores.length ? median(scores) : 0;
+    counts[branch] = scores.length;
   }
   rows.sort((a, b) => (a.score ?? 999) - (b.score ?? 999));
-  cache = { rows, records, medians };
+  cache = { rows, records, medians, counts };
   return cache;
 }
 
@@ -98,7 +100,7 @@ const titleCase = (s: string) => s.toLowerCase().replace(/(^|[\s-])\p{L}/gu, (m)
 const cleanName = (navn: string) => titleCase(navn.replace(/\s+(AS|ASA|ENK|DA|ANS|SA)$/i, '').trim());
 
 export function generateClient(host: string): { record: ClientRecord; notes: string[] } {
-  const { records, medians } = load();
+  const { records, medians, counts } = load();
   const r = records.get(hostOf(host));
   if (!r) throw new Error(`Brak ${host} w benchmarku v0.4`);
   if (r.score == null) throw new Error(`${host}: strona była nieosiągalna w benchmarku — brak danych`);
@@ -132,7 +134,7 @@ export function generateClient(host: string): { record: ClientRecord; notes: str
     BY: by, CITY: by,
     'KONKURRENT 1': '', 'KONKURRENT 2': '', 'KONKURRENT 3': '',
     'COMPETITOR 1': '', 'COMPETITOR 2': '', 'COMPETITOR 3': '',
-    '57': score, '70': med,
+    '57': score, '70': med, ANTALL: String(counts[r.branch]),
     BRANSJE: words.BRANSJE,
     'OBSERVASJON FRA AI — f.eks. «ChatGPT la til at den for større prosjekter også ville nevne dere»': '',
     'AI OBSERVATION': '',
