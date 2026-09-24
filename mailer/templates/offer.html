@@ -1,55 +1,43 @@
-<!-- AppSynth offer v1 (2026-09-10): mail towarzyszący ofercie PDF + raportowi PDF. Załączniki w vars.attachments. Ceny w vars (PRIS_*). -->
+<!-- AppSynth offer v2 (2026-09-24, English only): mail towarzyszący ofercie PDF + raportowi PDF. Załączniki w vars.attachments. Ceny w defaults.json (PRICE_*). -->
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f6faf7;margin:0;padding:0;">
 <tr><td align="center" style="padding:24px 12px;">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#ffffff;border:1px solid #d8e8de;border-radius:14px;">
+
+<!-- header -->
 <tr><td style="padding:22px 32px 18px 32px;border-bottom:1px solid #eaf4ee;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin:0;border-collapse:collapse;"><tr>
-    <td valign="middle" align="left" style="white-space:nowrap;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;"><a href="https://appsynth.pl/no" style="text-decoration:none;"><span style="font-size:18px;font-weight:800;color:#086633;letter-spacing:.01em;">AppSynth</span></a></td>
-    <td valign="middle" align="right" style="white-space:nowrap;font-size:12px;color:#7a9486;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;">AI-native software engineering</td>
+    <td valign="middle" align="left" style="text-align:left;white-space:nowrap;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;"><a href="https://appsynth.pl" style="text-decoration:none;"><span style="display:inline-block;vertical-align:middle;font-size:18px;font-weight:800;color:#086633;letter-spacing:.01em;">AppSynth</span></a></td>
+    <td valign="middle" align="right" style="text-align:right;white-space:nowrap;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;color:#7a9486;">AI-native software engineering</td>
   </tr></table>
 </td></tr>
 
-<tr><td align="left" style="text-align:left;padding:28px 32px 8px 32px;font-size:15px;line-height:1.6;color:#12271c;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;">
-  <p style="margin:0 0 16px 0;">Hei [FORNAVN],</p>
-  <p style="margin:0 0 16px 0;">takk for tilbakemeldingen. Som lovet: rapporten for [firma.no] og et konkret tilbud ligger vedlagt.</p>
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 18px 0;border-collapse:collapse;"><tr><td style="padding:10px 14px;border-left:4px solid #086633;background:#f6faf7;font-size:13px;line-height:1.7;color:#12271c;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;">📎 <strong>[RAPPORT_FIL]</strong> — full gjennomgang, 34 tester, fikseliste<br>📎 <strong>[TILBUD_FIL]</strong> — tilbud, gyldig til [GYLDIG_TIL]</td></tr></table>
-  <p style="margin:0 0 16px 0;">Kort oppsummert: [firma.no] fikk <strong>[57] av 100</strong> (bransjemedianen er [70]), og ingen av de tre AI-motorene nevner [FIRMA] når man spør om [TJENESTE] i [BY]. Samtidig ser AI-en allerede nisjen deres — det er dette vi bygger videre på.</p>
+<!-- body -->
+<tr><td align="left" style="text-align:left;padding:28px 32px 8px 32px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#12271c;">
+  <p align="left" style="text-align:left;margin:0 0 16px 0;">Hi [FIRST NAME],</p>
+  <p align="left" style="text-align:left;margin:0 0 16px 0;">thank you for getting back to me. As promised, the report for [company.no] and a concrete offer are attached.</p>
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 18px 0;border-collapse:collapse;"><tr><td style="padding:10px 14px;border-left:4px solid #086633;background:#f6faf7;font-size:13px;line-height:1.7;color:#12271c;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;">📎 <strong>[REPORT_FILE]</strong> — full review, 34 tests, fix list<br>📎 <strong>[OFFER_FILE]</strong> — offer, valid until [VALID_UNTIL]</td></tr></table>
+  <p align="left" style="text-align:left;margin:0 0 16px 0;">In short: [company.no] scored <strong>[57] out of 100</strong> (the median in your trade is [70]), and none of the three AI engines mention [COMPANY] when asked about [SERVICE] in [CITY]. At the same time, the AI already sees your niche — that is what we build on.</p>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin:20px 0;background:#f6faf7;border:1px solid #d8e8de;border-radius:12px;border-collapse:separate;">
-    <tr><td colspan="2" style="padding:10px 14px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#7a9486;">[TABELL_TITTEL]</td></tr>
-    <tr><td style="padding:12px 14px;border-top:1px solid #d8e8de;font-size:14px;color:#12271c;vertical-align:top;"><strong>AI Visibility Audit</strong><br><span style="font-size:12px;color:#648271;">34 tester · dokumenterte AI-svar · benchmark 447 firmaer · fikseliste. Allerede levert — trekkes fra pakken.</span></td><td align="right" style="padding:12px 14px;border-top:1px solid #d8e8de;font-size:15px;font-weight:800;color:#648271;white-space:nowrap;vertical-align:top;">[PRIS_AUDIT] NOK</td></tr><tr><td style="padding:12px 14px;border-top:1px solid #d8e8de;font-size:14px;color:#12271c;vertical-align:top;"><strong>Pakke: audit + utbedring <span style="font-size:11px;color:#086633;font-weight:600;">— anbefalt</span></strong><br><span style="font-size:12px;color:#648271;">Vi fikser alt fikselisten avdekker, til fast pris. Avsluttes med ny måling. Auditen inkludert.</span></td><td align="right" style="padding:12px 14px;border-top:1px solid #d8e8de;font-size:15px;font-weight:800;color:#086633;white-space:nowrap;vertical-align:top;">[PRIS_PAKKE] NOK</td></tr><tr><td style="padding:12px 14px;border-top:1px solid #d8e8de;font-size:14px;color:#12271c;vertical-align:top;"><strong>Månedlig AI-monitorering</strong><br><span style="font-size:12px;color:#648271;">Samme spørsmål, samme motorer, hver måned. Ingen bindingstid.</span></td><td align="right" style="padding:12px 14px;border-top:1px solid #d8e8de;font-size:15px;font-weight:800;color:#12271c;white-space:nowrap;vertical-align:top;">[PRIS_MND] NOK/mnd</td></tr>
+    <tr><td colspan="2" style="padding:10px 14px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#7a9486;">[TABLE_TITLE]</td></tr>
+    <tr><td style="padding:12px 14px;border-top:1px solid #d8e8de;font-size:14px;color:#12271c;vertical-align:top;"><strong>AI Visibility Audit</strong><br><span style="font-size:12px;color:#648271;">34 tests · documented AI answers · benchmark of [COUNT] companies · fix list. Already delivered — deducted from the package.</span></td><td align="right" style="padding:12px 14px;border-top:1px solid #d8e8de;font-size:15px;font-weight:800;color:#648271;white-space:nowrap;vertical-align:top;">[PRICE_AUDIT] NOK</td></tr><tr><td style="padding:12px 14px;border-top:1px solid #d8e8de;font-size:14px;color:#12271c;vertical-align:top;"><strong>Package: audit + implementation <span style="font-size:11px;color:#086633;font-weight:600;">— recommended</span></strong><br><span style="font-size:12px;color:#648271;">We fix everything the fix list uncovers, at a fixed price. Ends with a new measurement. Audit included.</span></td><td align="right" style="padding:12px 14px;border-top:1px solid #d8e8de;font-size:15px;font-weight:800;color:#086633;white-space:nowrap;vertical-align:top;">[PRICE_PACKAGE] NOK</td></tr><tr><td style="padding:12px 14px;border-top:1px solid #d8e8de;font-size:14px;color:#12271c;vertical-align:top;"><strong>Monthly AI monitoring</strong><br><span style="font-size:12px;color:#648271;">Same questions, same engines, every month. No lock-in.</span></td><td align="right" style="padding:12px 14px;border-top:1px solid #d8e8de;font-size:15px;font-weight:800;color:#12271c;white-space:nowrap;vertical-align:top;">[PRICE_MONTHLY] NOK/month</td></tr>
   </table>
-  <p style="margin:0 0 16px 0;">Vi lover ikke topplassering på forbrukerlister. Vi leverer det som er målbart: en nettside AI-motorene kan lese og sitere, sterkere posisjon i deres segment, og en måling som viser trenden. Fast pris, 50 % ved oppstart, 50 % ved levering.</p>
-  <p style="margin:0 0 16px 0;"><strong>Neste steg:</strong> 15 minutter på video for å gå gjennom funnene — eller svar «vi kjører pakken» på denne e-posten, så sender jeg avtalen. Passer [FORESLÅTT_TID]?</p>
-</td></tr>
-<tr><td align="left" style="text-align:left;padding:8px 32px 24px 32px;font-size:14px;line-height:1.5;color:#4a6355;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;">
-  Mvh,<br><strong style="color:#12271c;">Sylwia Zabłocka</strong><br>Medeier, AppSynth<br>
-  <a href="https://appsynth.pl/no" style="color:#086633;text-decoration:none;">appsynth.pl/no</a> &nbsp;·&nbsp; <a href="mailto:sylwia@appsynth.pl" style="color:#086633;text-decoration:none;">sylwia@appsynth.pl</a> &nbsp;·&nbsp; <a href="https://www.linkedin.com/in/sylwia-zab%C5%82ocka-572998123" style="color:#086633;text-decoration:none;">LinkedIn</a>
-</td></tr>
-<tr><td style="padding:0 32px;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin:0;border-collapse:collapse;"><tr>
-    <td style="border-top:1px solid #d8e8de;"></td>
-    <td width="120" align="center" style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#7a9486;padding:0 10px;white-space:nowrap;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;">English version</td>
-    <td style="border-top:1px solid #d8e8de;"></td>
-  </tr></table>
+  <p align="left" style="text-align:left;margin:0 0 16px 0;">We don't promise top spots on consumer lists. We deliver what is measurable: a website AI engines can read and cite, a stronger position in your segment, and a measurement that shows the trend. Fixed price, 50% at start, 50% at delivery.</p>
+  <p align="left" style="text-align:left;margin:0 0 16px 0;"><strong>Next step:</strong> 15 minutes on video to walk through the findings — or reply "let's go with the package" and I'll send the agreement. Would [PROPOSED_TIME] work?</p>
 </td></tr>
 
-<tr><td align="left" style="text-align:left;padding:24px 32px 8px 32px;font-size:15px;line-height:1.6;color:#12271c;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;">
-  <p style="margin:0 0 16px 0;">Hi [FIRST NAME],</p>
-  <p style="margin:0 0 16px 0;">thank you for getting back to me. As promised, the report for [company.no] and a concrete offer are attached.</p>
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 18px 0;border-collapse:collapse;"><tr><td style="padding:10px 14px;border-left:4px solid #086633;background:#f6faf7;font-size:13px;line-height:1.7;color:#12271c;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;">📎 <strong>[RAPPORT_FIL]</strong> — full review, 34 tests, fix list<br>📎 <strong>[TILBUD_FIL]</strong> — offer, valid until [GYLDIG_TIL]</td></tr></table>
-  <p style="margin:0 0 16px 0;">In short: [company.no] scored <strong>[57] out of 100</strong> (the median in your trade is [70]), and none of the three AI engines mention [COMPANY] when asked about [SERVICE] in [CITY]. At the same time, the AI already sees your niche — that is what we build on.</p>
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin:20px 0;background:#f6faf7;border:1px solid #d8e8de;border-radius:12px;border-collapse:separate;">
-    <tr><td colspan="2" style="padding:10px 14px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#7a9486;">[TABELL_TITTEL]</td></tr>
-    <tr><td style="padding:12px 14px;border-top:1px solid #d8e8de;font-size:14px;color:#12271c;vertical-align:top;"><strong>AI Visibility Audit</strong><br><span style="font-size:12px;color:#648271;">34 tests · documented AI answers · benchmark of 447 companies · fix list. Already delivered — deducted from the package.</span></td><td align="right" style="padding:12px 14px;border-top:1px solid #d8e8de;font-size:15px;font-weight:800;color:#648271;white-space:nowrap;vertical-align:top;">[PRIS_AUDIT] NOK</td></tr><tr><td style="padding:12px 14px;border-top:1px solid #d8e8de;font-size:14px;color:#12271c;vertical-align:top;"><strong>Package: audit + implementation <span style="font-size:11px;color:#086633;font-weight:600;">— recommended</span></strong><br><span style="font-size:12px;color:#648271;">We fix everything the fix list uncovers, at a fixed price. Ends with a new measurement. Audit included.</span></td><td align="right" style="padding:12px 14px;border-top:1px solid #d8e8de;font-size:15px;font-weight:800;color:#086633;white-space:nowrap;vertical-align:top;">[PRIS_PAKKE] NOK</td></tr><tr><td style="padding:12px 14px;border-top:1px solid #d8e8de;font-size:14px;color:#12271c;vertical-align:top;"><strong>Monthly AI monitoring</strong><br><span style="font-size:12px;color:#648271;">Same questions, same engines, every month. No lock-in.</span></td><td align="right" style="padding:12px 14px;border-top:1px solid #d8e8de;font-size:15px;font-weight:800;color:#12271c;white-space:nowrap;vertical-align:top;">[PRIS_MND] NOK/month</td></tr>
-  </table>
-  <p style="margin:0 0 16px 0;">We don't promise top spots on consumer lists. We deliver what is measurable: a website AI engines can read and cite, a stronger position in your segment, and a measurement that shows the trend. Fixed price, 50% at start, 50% at delivery.</p>
-  <p style="margin:0 0 16px 0;"><strong>Next step:</strong> 15 minutes on video to walk through the findings — or reply "let's go with the package" and I'll send the agreement. Would [FORESLÅTT_TID_EN] work?</p>
+<!-- signature -->
+<tr><td align="left" style="text-align:left;padding:8px 32px 28px 32px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;color:#4a6355;">
+  Best regards,<br>
+  <strong style="color:#12271c;">Sylwia Zabłocka</strong><br>
+  Co-owner, AppSynth — AI-native software engineering<br>
+  <a href="https://appsynth.pl" style="color:#086633;text-decoration:none;">appsynth.pl</a> &nbsp;·&nbsp; <a href="mailto:sylwia@appsynth.pl" style="color:#086633;text-decoration:none;">sylwia@appsynth.pl</a> &nbsp;·&nbsp; <a href="https://www.linkedin.com/in/sylwia-zab%C5%82ocka-572998123" style="color:#086633;text-decoration:none;">LinkedIn</a>
 </td></tr>
-<tr><td align="left" style="text-align:left;padding:8px 32px 28px 32px;font-size:14px;line-height:1.5;color:#4a6355;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;">
-  Best regards,<br><strong style="color:#12271c;">Sylwia Zabłocka</strong><br>Co-owner, AppSynth — AI-native software engineering<br>
-  <a href="https://appsynth.pl" style="color:#086633;text-decoration:none;">appsynth.pl</a> &nbsp;·&nbsp; <a href="mailto:sylwia@appsynth.pl" style="color:#086633;text-decoration:none;">sylwia@appsynth.pl</a>
+
+<!-- footer -->
+<tr><td align="left" style="text-align:left;padding:14px 32px;background:#f6faf7;border-top:1px solid #eaf4ee;border-radius:0 0 14px 14px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:11px;line-height:1.5;color:#7a9486;">
+  AppSynth — Adrian Zabłocki · VAT ID (org. no.) PL5451655450 · appsynth.pl &nbsp;|&nbsp; All prices excl. VAT (reverse charge). The offer is valid for 30 days.
 </td></tr>
-<tr><td style="padding:14px 32px;background:#f6faf7;border-top:1px solid #eaf4ee;border-radius:0 0 14px 14px;font-size:11px;line-height:1.5;color:#7a9486;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;">
-  AppSynth — Adrian Zabłocki · NIP (org.nr) PL5451655450 · appsynth.pl &nbsp;|&nbsp; Alle priser eks. mva (omvendt avgiftsplikt). Tilbudet er gyldig i 30 dager.
+
+</table>
 </td></tr>
-</table></td></tr></table>
+</table>

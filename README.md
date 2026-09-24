@@ -47,7 +47,8 @@ Zasady:
 - Brak wysyłki hurtowej — celowo. Jeden klient, jeden mail, jedna decyzja.
 
 „Nowy klient z benchmarku” tworzy od razu `clients/<domena>.json` (istniejącego nie nadpisuje) z: firmą, domeną, gminą,
-branżą, wynikiem, medianą branży i 3 najkosztowniejszymi niezaliczonymi checkami (mapa NB/EN w `src/lib/benchmark.ts`).
+branżą, wynikiem, medianą branży, liczbą firm w fali (`COUNT`) i 3 najkosztowniejszymi niezaliczonymi checkami (mapa w `src/lib/benchmark.ts`).
+**Od 2026-09-24 szablony i tematy są wyłącznie po angielsku** (decyzja Adriana: cała komunikacja z klientami po angielsku; norweski tylko na stronie i w pytaniach testów G). Klucze rekordu: `FIRST NAME`, `COMPANY`, `company.no`, `SERVICE`, `CITY`, `TRADE`, `COUNT`, `57`, `70`, `COMPETITOR 1–3`, `AI OBSERVATION`, `FINDING 1–3`; follow-up: `FIRST ADDRESS`; listed: `PLACE`, `AI REMARK`; oferta: `REPORT_FILE`, `OFFER_FILE`, `VALID_UNTIL`, `PROPOSED_TIME`, `TABLE_TITLE`, `PRICE_*`.
 Imię, adres, konkurentów i obserwację AI uzupełniasz po ręcznych testach G.
 
 Nadawca: selekt „od:” w nagłówku wybiera alias skrzynki z `FROM_ADDRESSES` w `mailer/.env`

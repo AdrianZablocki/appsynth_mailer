@@ -14,38 +14,39 @@ export interface BenchRow {
   branch: Branch; domain: string; host: string; navn: string; kommune: string; score: number | null; label: string; unreachable: boolean;
 }
 
-const BRANCH_WORDS: Record<Branch, { BRANSJE: string; TJENESTE: string; SERVICE: string }> = {
-  rorleggere: { BRANSJE: 'rørleggere', TJENESTE: 'rørleggerarbeid', SERVICE: 'plumbing work' },
-  elektrikere: { BRANSJE: 'elektrikere', TJENESTE: 'elektrikerarbeid', SERVICE: 'electrical work' },
+/* Od 2026-09-24 maile tylko po angielsku: TRADE = branża w l.mn., SERVICE = usługa, o którą pytaliśmy AI. */
+const BRANCH_WORDS: Record<Branch, { TRADE: string; SERVICE: string }> = {
+  rorleggere: { TRADE: 'plumbers', SERVICE: 'plumbing work' },
+  elektrikere: { TRADE: 'electricians', SERVICE: 'electrical work' },
 };
 
-/* Krótkie sformułowania znalezisk do zdania "Vi fant ingen … / We found no …" w cold mailu.
+/* Krótkie sformułowania znalezisk do zdania "[company.no] is missing …" w cold mailu.
    Klucz = id checku z METODOLOGIA v0.4. Brak w mapie → nazwa PL z benchmarku (do ręcznej poprawki). */
-const FINDINGS: Record<string, { nb: string; en: string }> = {
-  A2: { nb: 'tilgang for GPTBot (blokkert i robots.txt)', en: 'access for GPTBot (blocked in robots.txt)' },
-  A8: { nb: 'tilgang for AI-roboter — brannmuren blokkerer dem', en: 'access for AI crawlers — the firewall blocks them' },
-  A9: { nb: 'tilgang for roboter (globalt Disallow i robots.txt)', en: 'crawler access (global Disallow in robots.txt)' },
-  B1: { nb: 'lesbart innhold i HTML-en (alt lastes med JavaScript)', en: 'readable content in the HTML (everything loads via JavaScript)' },
-  B2: { nb: 'innhold uten JavaScript (tom SPA)', en: 'content without JavaScript (empty SPA shell)' },
-  B3: { nb: 'språkmerking (<html lang>)', en: 'language tag (<html lang>)' },
-  C1: { nb: 'strukturert data (JSON-LD)', en: 'structured data (JSON-LD)' },
-  C2: { nb: 'Organization/LocalBusiness-data', en: 'Organization/LocalBusiness data' },
-  C3: { nb: 'FAQ-data (FAQPage)', en: 'FAQ data (FAQPage)' },
-  C4: { nb: 'brødsmulesti (BreadcrumbList)', en: 'breadcrumb data (BreadcrumbList)' },
-  D1: { nb: 'én tydelig H1', en: 'a single clear H1' },
-  D2: { nb: 'ryddig overskriftshierarki', en: 'a clean heading hierarchy' },
-  D3: { nb: 'FAQ eller spørsmål i overskriftene', en: 'an FAQ or questions in headings' },
-  D4: { nb: 'title og meta description', en: 'title and meta description' },
-  D5: { nb: 'beskrivende overskrifter', en: 'descriptive headings' },
-  E1: { nb: 'telefon og e-post i HTML-en', en: 'phone and e-mail in the HTML' },
-  E2: { nb: 'fysisk adresse på siden', en: 'a physical address on the site' },
-  E3: { nb: 'org.nummer i HTML-en', en: 'org. number in the HTML' },
-  E4: { nb: 'konsekvent firmanavn', en: 'a consistent company name' },
-  F1: { nb: 'sitemap.xml', en: 'sitemap.xml' },
-  F2: { nb: 'canonical på forsiden', en: 'a canonical tag on the home page' },
-  F3: { nb: 'HTTPS med redirect fra HTTP', en: 'HTTPS with redirect from HTTP' },
-  F4: { nb: 'rask svartid på forsiden', en: 'a fast home-page response' },
-  F7: { nb: 'domene uten www (bare www virker)', en: 'the bare domain (only www works)' },
+const FINDINGS: Record<string, string> = {
+  A2: 'access for GPTBot (blocked in robots.txt)',
+  A8: 'access for AI crawlers — the firewall blocks them',
+  A9: 'crawler access (global Disallow in robots.txt)',
+  B1: 'readable content in the HTML (everything loads via JavaScript)',
+  B2: 'content without JavaScript (empty SPA shell)',
+  B3: 'language tag (<html lang>)',
+  C1: 'structured data (JSON-LD)',
+  C2: 'Organization/LocalBusiness data',
+  C3: 'FAQ data (FAQPage)',
+  C4: 'breadcrumb data (BreadcrumbList)',
+  D1: 'a single clear H1',
+  D2: 'a clean heading hierarchy',
+  D3: 'an FAQ or questions in headings',
+  D4: 'title and meta description',
+  D5: 'descriptive headings',
+  E1: 'phone and e-mail in the HTML',
+  E2: 'a physical address on the site',
+  E3: 'org. number in the HTML',
+  E4: 'a consistent company name',
+  F1: 'sitemap.xml',
+  F2: 'a canonical tag on the home page',
+  F3: 'HTTPS with redirect from HTTP',
+  F4: 'a fast home-page response',
+  F7: 'the bare domain (only www works)',
 };
 
 let cache: { rows: BenchRow[]; records: Map<string, Record_ & { branch: Branch }>; medians: Record<Branch, number>; counts: Record<Branch, number> } | null = null;
@@ -119,30 +120,26 @@ export function generateClient(host: string): { record: ClientRecord; notes: str
     .filter((c) => !c.passed)
     .sort((a, b) => (b.max_points - b.points) - (a.max_points - a.points));
   const top = failed.slice(0, 3);
-  const funn = top.map((c) => FINDINGS[c.id]?.nb ?? `[${c.id}: ${c.name}]`);
-  const finding = top.map((c) => FINDINGS[c.id]?.en ?? `[${c.id}: ${c.name}]`);
-  for (const c of top) if (!FINDINGS[c.id]) notes.push(`Check ${c.id} bez tłumaczenia — popraw FUNN/FINDING ręcznie`);
-  while (funn.length < 3) { funn.push(''); finding.push(''); notes.push('Mniej niż 3 niezaliczone checki — uzupełnij FUNN/FINDING'); }
+  const finding = top.map((c) => FINDINGS[c.id] ?? `[${c.id}: ${c.name}]`);
+  for (const c of top) if (!FINDINGS[c.id]) notes.push(`Check ${c.id} bez tłumaczenia — popraw FINDING ręcznie`);
+  while (finding.length < 3) { finding.push(''); notes.push('Mniej niż 3 niezaliczone checki — uzupełnij FINDING'); }
 
   const record: ClientRecord = {
     customer: hostOf(host),
     to: '',
-    FORNAVN: '', 'FIRST NAME': '',
-    FIRMA: firma, COMPANY: firma,
-    'firma.no': hostOf(host), 'company.no': hostOf(host),
-    TJENESTE: words.TJENESTE, SERVICE: words.SERVICE,
-    BY: by, CITY: by,
-    'KONKURRENT 1': '', 'KONKURRENT 2': '', 'KONKURRENT 3': '',
+    'FIRST NAME': '',
+    COMPANY: firma,
+    'company.no': hostOf(host),
+    SERVICE: words.SERVICE,
+    CITY: by,
     'COMPETITOR 1': '', 'COMPETITOR 2': '', 'COMPETITOR 3': '',
-    '57': score, '70': med, ANTALL: String(counts[r.branch]),
-    BRANSJE: words.BRANSJE,
-    'OBSERVASJON FRA AI — f.eks. «ChatGPT la til at den for større prosjekter også ville nevne dere»': '',
+    '57': score, '70': med, COUNT: String(counts[r.branch]),
+    TRADE: words.TRADE,
     'AI OBSERVATION': '',
-    'FUNN 1': funn[0], 'FUNN 2': funn[1], 'FUNN 3': funn[2],
     'FINDING 1': finding[0], 'FINDING 2': finding[1], 'FINDING 3': finding[2],
     templates: {},
-    notes: `${r.firma?.navn ?? ''} · org.nr ${r.firma?.orgnr ?? '?'} · ${r.firma?.ansatte ?? '?'} ansatte · benchmark v0.4: ${score}/100 (${r.label ?? ''}), mediana ${words.BRANSJE} ${med}.`,
+    notes: `${r.firma?.navn ?? ''} · org.nr ${r.firma?.orgnr ?? '?'} · ${r.firma?.ansatte ?? '?'} ansatte · benchmark v0.4: ${score}/100 (${r.label ?? ''}), mediana ${words.TRADE} ${med}.`,
   };
-  notes.push(`Wynik ${score}/100 (v0.4), mediana ${words.BRANSJE}: ${med}. Konkurenci, imię, adres i obserwacja AI — z ręcznych testów G.`);
+  notes.push(`Wynik ${score}/100 (v0.4), mediana ${words.TRADE}: ${med}. Konkurenci, imię, adres i obserwacja AI — z ręcznych testów G.`);
   return { record, notes };
 }

@@ -18,44 +18,33 @@ const PL_LABELS: Record<string, string> = {
   customer: 'Klient (domena, identyfikator rekordu)',
   subject: 'Temat wiadomości',
   to: 'Adres e-mail odbiorcy',
-  FORNAVN: 'Imię odbiorcy (wersja norweska)',
-  'FIRST NAME': 'Imię odbiorcy (wersja angielska)',
-  FIRMA: 'Nazwa firmy (wersja norweska)',
-  COMPANY: 'Nazwa firmy (wersja angielska)',
-  'firma.no': 'Domena firmy (wersja norweska)',
-  'company.no': 'Domena firmy (wersja angielska)',
-  TJENESTE: 'Usługa, o którą pytaliśmy AI (po norwesku, np. rørleggerarbeid)',
+  'FIRST NAME': 'Imię odbiorcy',
+  COMPANY: 'Nazwa firmy',
+  'company.no': 'Domena firmy',
   SERVICE: 'Usługa, o którą pytaliśmy AI (po angielsku, np. plumbing work)',
-  BY: 'Miasto (wersja norweska)',
-  CITY: 'Miasto (wersja angielska)',
-  BRANSJE: 'Branża w liczbie mnogiej (po norwesku, np. rørleggere)',
+  CITY: 'Miasto',
+  TRADE: 'Branża w liczbie mnogiej (po angielsku, np. plumbers)',
+  COUNT: 'Liczba firm z wynikiem w fali benchmarku dla branży (np. 325)',
   '57': 'Wynik firmy w benchmarku (punkty na 100)',
   '70': 'Mediana branży w benchmarku (punkty na 100)',
-  'AI OBSERVATION': 'Obserwacja z odpowiedzi AI (wersja angielska)',
-  'FØRSTE ADRESSE': 'Adres, na który poszedł pierwszy mail (wersja norweska)',
-  'FIRST ADDRESS': 'Adres, na który poszedł pierwszy mail (wersja angielska)',
-  FORESLÅTT_TID: 'Proponowany termin rozmowy (po norwesku)',
-  FORESLÅTT_TID_EN: 'Proponowany termin rozmowy (po angielsku)',
-  GYLDIG_TIL: 'Oferta ważna do (data po norwesku)',
-  PRIS_AUDIT: 'Cena audytu (NOK, bez VAT)',
-  PRIS_PAKKE: 'Cena pakietu wdrożeniowego (NOK, bez VAT)',
-  PRIS_MND: 'Cena abonamentu miesięcznego (NOK, bez VAT)',
-  RAPPORT_FIL: 'Nazwa pliku raportu PDF (jak w załączniku)',
-  TILBUD_FIL: 'Nazwa pliku oferty PDF (jak w załączniku)',
-  TABELL_TITTEL: 'Tytuł tabeli z cenami (po norwesku)',
-  PLASS: 'Pozycja firmy na liście AI (po norwesku, np. «sist, som nr. 5 av 5») — szablon cold-mail-listed',
-  PLACE: 'Pozycja firmy na liście AI (po angielsku, np. «last, 5th of 5») — szablon cold-mail-listed',
-  'AI KOMMENTAR': 'Zastrzeżenie AI przy firmie, cytat (po norwesku, np. «svært gode vurderinger, men foreløpig få anmeldelser»)',
-  'AI REMARK': 'Zastrzeżenie AI przy firmie, cytat (po angielsku)',
+  'AI OBSERVATION': 'Obserwacja z odpowiedzi AI (jedno zdanie)',
+  'FIRST ADDRESS': 'Adres, na który poszedł pierwszy mail',
+  PROPOSED_TIME: 'Proponowany termin rozmowy (po angielsku)',
+  VALID_UNTIL: 'Oferta ważna do (data po angielsku)',
+  PRICE_AUDIT: 'Cena audytu (NOK, bez VAT)',
+  PRICE_PACKAGE: 'Cena pakietu wdrożeniowego (NOK, bez VAT)',
+  PRICE_MONTHLY: 'Cena abonamentu miesięcznego (NOK, bez VAT)',
+  REPORT_FILE: 'Nazwa pliku raportu PDF (jak w załączniku)',
+  OFFER_FILE: 'Nazwa pliku oferty PDF (jak w załączniku)',
+  TABLE_TITLE: 'Tytuł tabeli z cenami',
+  PLACE: 'Pozycja firmy na liście AI (np. «last, 5th of 5») — szablon cold-mail-listed',
+  'AI REMARK': 'Zastrzeżenie AI przy firmie, cytat po angielsku (np. «very good ratings, but few reviews so far»)',
 };
 function plLabel(k: string): string | undefined {
   if (PL_LABELS[k]) return PL_LABELS[k];
   let m: RegExpMatchArray | null;
-  if ((m = k.match(/^KONKURRENT (\d+)$/))) return `Konkurent nr ${m[1]} wskazany przez AI (wersja norweska)`;
-  if ((m = k.match(/^COMPETITOR (\d+)$/))) return `Konkurent nr ${m[1]} wskazany przez AI (wersja angielska)`;
-  if ((m = k.match(/^FUNN (\d+)$/))) return `Ustalenie nr ${m[1]}: brak na stronie (po norwesku, krótko)`;
+  if ((m = k.match(/^COMPETITOR (\d+)$/))) return `Konkurent nr ${m[1]} wskazany przez AI`;
   if ((m = k.match(/^FINDING (\d+)$/))) return `Ustalenie nr ${m[1]}: brak na stronie (po angielsku, krótko)`;
-  if (k.startsWith('OBSERVASJON FRA AI')) return 'Obserwacja z odpowiedzi AI (wersja norweska)';
   return undefined;
 }
 

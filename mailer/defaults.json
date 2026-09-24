@@ -1,21 +1,20 @@
 {
-  "_comment": "Wartości domyślne per szablon. Klucz = placeholder; 'subject' może używać [PLACEHOLDERÓW] z rekordu klienta. Rekord klienta (clients/<domena>.json) nadpisuje wszystko; jego sekcja templates.<szablon> nadpisuje rekord.",
+  "_comment": "Wartości domyślne per szablon. Klucz = placeholder; 'subject' może używać [PLACEHOLDERÓW] z rekordu klienta. Rekord klienta (clients/<domena>.json) nadpisuje wszystko; jego sekcja templates.<szablon> nadpisuje rekord. Od 2026-09-24 wszystko po angielsku.",
   "cold-mail": {
-    "subject": "Vi spurte AI hvem den anbefaler for [TJENESTE] i [BY]. [FIRMA] var ikke på listen."
+    "subject": "We asked AI who it recommends for [SERVICE] in [CITY]. [COMPANY] wasn't on the list."
   },
   "cold-mail-listed": {
-    "subject": "Vi spurte AI hvem den anbefaler for [TJENESTE] i [BY]. [FIRMA] kom sist på listen.",
-    "PLASS": "sist på listen",
+    "subject": "We asked AI who it recommends for [SERVICE] in [CITY]. [COMPANY] came last.",
     "PLACE": "last on the list"
   },
   "follow-up": {
-    "subject": "Re: Vi spurte AI hvem den anbefaler for [TJENESTE] i [BY]"
+    "subject": "Re: We asked AI who it recommends for [SERVICE] in [CITY]"
   },
   "offer": {
-    "subject": "Rapport og tilbud: AI-synlighet for [FIRMA]",
-    "TABELL_TITTEL": "Hva vi tilbyr · priser eks. mva",
-    "PRIS_AUDIT": "4 900",
-    "PRIS_PAKKE": "12 900",
-    "PRIS_MND": "1 900"
+    "subject": "Report and offer: AI visibility for [COMPANY]",
+    "TABLE_TITLE": "What we offer · prices excl. VAT",
+    "PRICE_AUDIT": "4 900",
+    "PRICE_PACKAGE": "12 900",
+    "PRICE_MONTHLY": "1 900"
   }
 }
