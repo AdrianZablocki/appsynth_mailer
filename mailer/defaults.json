@@ -1,7 +1,9 @@
 {
   "_comment": "Wartości domyślne per szablon. Klucz = placeholder; 'subject' może używać [PLACEHOLDERÓW] z rekordu klienta. Rekord klienta (clients/<domena>.json) nadpisuje wszystko; jego sekcja templates.<szablon> nadpisuje rekord. Od 2026-09-24 wszystko po angielsku.",
   "cold-mail": {
-    "subject": "We asked AI who it recommends for [SERVICE] in [CITY]. [COMPANY] wasn't on the list."
+    "subject": "We asked AI who it recommends for [SERVICE] in [CITY]. [COMPANY] wasn't on the list.",
+    "LIST RESULT": "was not on any of the lists.",
+    "AI SOURCE": "it relies on third-party sources, not on your website"
   },
   "cold-mail-listed": {
     "subject": "We asked AI who it recommends for [SERVICE] in [CITY]. [COMPANY] came last.",

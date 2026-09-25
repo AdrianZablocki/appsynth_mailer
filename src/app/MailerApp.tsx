@@ -37,6 +37,8 @@ const PL_LABELS: Record<string, string> = {
   REPORT_FILE: 'Nazwa pliku raportu PDF (jak w załączniku)',
   OFFER_FILE: 'Nazwa pliku oferty PDF (jak w załączniku)',
   TABLE_TITLE: 'Tytuł tabeli z cenami',
+  'LIST RESULT': 'Wynik na listach AI, po «[COMPANY]» (domyślnie «was not on any of the lists.») — szablon cold-mail',
+  'AI SOURCE': 'Skąd AI bierze wiedzę / dlaczego nie poleca, po «but» (domyślnie «it relies on third-party sources, not on your website») — szablon cold-mail',
   PLACE: 'Pozycja firmy na liście AI (np. «last, 5th of 5») — szablon cold-mail-listed',
   'AI REMARK': 'Zastrzeżenie AI przy firmie, cytat po angielsku (np. «very good ratings, but few reviews so far»)',
 };
