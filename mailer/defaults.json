@@ -1,13 +1,10 @@
 {
-  "_comment": "Wartości domyślne per szablon. Klucz = placeholder; 'subject' może używać [PLACEHOLDERÓW] z rekordu klienta. Rekord klienta (clients/<domena>.json) nadpisuje wszystko; jego sekcja templates.<szablon> nadpisuje rekord. Od 2026-09-24 wszystko po angielsku.",
+  "_comment": "Wartości domyślne per szablon. Klucz = placeholder; 'subject' może używać [PLACEHOLDERÓW] z rekordu klienta. Rekord klienta (clients/<domena>.json) nadpisuje wszystko; jego sekcja templates.<szablon> nadpisuje rekord. Od 2026-09-24 wszystko po angielsku. Od 2026-09-28 bez domyślnych zdań o wyniku na listach AI (LIST RESULT, AI SOURCE, PLACE, AI RESULT) — każdy klient wpisuje je sam, a LISTED (yes/no) musi pasować do szablonu.",
   "cold-mail": {
-    "subject": "We asked AI who it recommends for [SERVICE] in [CITY]. [COMPANY] wasn't on the list.",
-    "LIST RESULT": "was not on any of the lists.",
-    "AI SOURCE": "it relies on third-party sources, not on your website"
+    "subject": "We asked AI who it recommends for [SERVICE] in [CITY]. [COMPANY] wasn't on the list."
   },
   "cold-mail-listed": {
-    "subject": "We asked AI who it recommends for [SERVICE] in [CITY]. [COMPANY] came last.",
-    "PLACE": "last on the list"
+    "subject": "We asked AI who it recommends for [SERVICE] in [CITY]. [COMPANY] came last."
   },
   "follow-up": {
     "subject": "Re: We asked AI who it recommends for [SERVICE] in [CITY]"

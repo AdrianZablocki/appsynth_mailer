@@ -54,3 +54,38 @@ export function setClientField(client: ClientRecord, template: string, defaults:
   }
   return { ...client, [k]: value };
 }
+
+/**
+ Szablony, które twierdzą coś o obecności firmy na listach AI. Pole LISTED w rekordzie (yes/no) = wynik testu G2
+ i musi pasować do szablonu — inaczej mail stwierdza nieprawdę (Askel 25.09: `cold-mail` „was not on any of the lists”
+ do firmy, która na listach była). Zwraca powód blokady albo null.
+*/
+export const LIST_CLAIM_TEMPLATES = new Set(['cold-mail', 'cold-mail-listed', 'follow-up', 'offer']);
+
+export function listedValue(client: ClientRecord): 'yes' | 'no' | '' {
+  const v = str(client.LISTED).trim().toLowerCase();
+  return v === 'yes' || v === 'no' ? v : '';
+}
+
+/** cold-mail u firmy z listy jest dopuszczalny tylko z własnym tematem i LIST RESULT (przypadek „1 z 8 odpowiedzi”). */
+const hasCustomColdMail = (client: ClientRecord) =>
+  !!str(client.templates?.['cold-mail']?.subject).trim() && !!str(client.templates?.['cold-mail']?.['LIST RESULT']).trim();
+
+export function listClaimBlock(template: string, client: ClientRecord): string | null {
+  if (!LIST_CLAIM_TEMPLATES.has(template)) return null;
+  const listed = listedValue(client);
+  if (!listed) return `Ustaw LISTED (yes/no) z wyniku testu G2, zanim wyślesz „${template}”: yes = firma pojawia się na listach AI, no = nie ma jej na żadnej.`;
+  if (template === 'cold-mail-listed' && listed !== 'yes')
+    return 'LISTED = no: firmy nie ma na listach AI, a „cold-mail-listed” twierdzi, że jest. Użyj „cold-mail”.';
+  if (template === 'cold-mail' && listed === 'yes' && !hasCustomColdMail(client))
+    return 'LISTED = yes: firma jest na listach AI, a „cold-mail” domyślnie mówi, że jej nie ma. Użyj „cold-mail-listed” albo wpisz dla „cold-mail” własny temat i LIST RESULT.';
+  return null;
+}
+
+/** Szablon pasujący do rekordu przy jego otwarciu (null = zostaw bieżący). */
+export function suggestedTemplate(client: ClientRecord, current: string): string | null {
+  if (current !== 'cold-mail' && current !== 'cold-mail-listed') return null;
+  const listed = listedValue(client);
+  if (!listed) return null;
+  return listed === 'yes' && !hasCustomColdMail(client) ? 'cold-mail-listed' : 'cold-mail';
+}

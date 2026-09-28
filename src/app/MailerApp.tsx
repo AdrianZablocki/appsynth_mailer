@@ -1,12 +1,12 @@
 'use client';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { UserButton } from '@clerk/nextjs';
-import { effectiveVars, setClientField, str, type ClientRecord, type Defaults, type Vars } from '@/lib/effective';
+import { effectiveVars, setClientField, str, suggestedTemplate, type ClientRecord, type Defaults, type Vars } from '@/lib/effective';
 
 type Template = { name: string; placeholders: string[] };
 type ClientRow = { id: string; customer: string; firma: string; mtime: number };
 type BenchRow = { branch: string; host: string; navn: string; kommune: string; score: number | null; label: string; unreachable: boolean };
-type Rendered = { html: string; text: string; leftovers: string[]; vars: Vars };
+type Rendered = { html: string; text: string; leftovers: string[]; vars: Vars; blocked: string | null };
 type Sender = { name: string; address: string };
 type SendResult = { from: string; to: string; messageId: string; attachments: string[]; imap: { ok: true; folder: string } | { ok: false; error: string } | null; logged: boolean };
 type Notice = { kind: 'ok' | 'warn' | 'err'; text: string } | null;
@@ -37,9 +37,11 @@ const PL_LABELS: Record<string, string> = {
   REPORT_FILE: 'Nazwa pliku raportu PDF (jak w załączniku)',
   OFFER_FILE: 'Nazwa pliku oferty PDF (jak w załączniku)',
   TABLE_TITLE: 'Tytuł tabeli z cenami',
-  'LIST RESULT': 'Wynik na listach AI, po «[COMPANY]» (domyślnie «was not on any of the lists.») — szablon cold-mail',
-  'AI SOURCE': 'Skąd AI bierze wiedzę / dlaczego nie poleca, po «but» (domyślnie «it relies on third-party sources, not on your website») — szablon cold-mail',
-  PLACE: 'Pozycja firmy na liście AI (np. «last, 5th of 5») — szablon cold-mail-listed',
+  LISTED: 'Czy firma jest na listach AI wg testu G2: yes / no (musi pasować do szablonu, inaczej wysyłka jest zablokowana)',
+  'LIST RESULT': 'Wynik na listach AI, po «[COMPANY]», z kropką (np. «was not on any of the lists.») — szablon cold-mail, bez wartości domyślnej',
+  'AI SOURCE': 'Skąd AI bierze wiedzę / dlaczego nie poleca, po «but» (np. «it relies on third-party sources, not on your website») — szablon cold-mail, bez wartości domyślnej',
+  PLACE: 'Pozycja firmy na liście AI (np. «last, 5th of 5») — szablon cold-mail-listed, bez wartości domyślnej',
+  'AI RESULT': 'Zdanie o wyniku na listach AI, z kropką (np. «none of them mentioned Entas.» albo «ChatGPT named Askel fifth of five, Gemini fourth of four.») — follow-up i offer',
   'AI REMARK': 'Zastrzeżenie AI przy firmie, cytat po angielsku (np. «very good ratings, but few reviews so far»)',
 };
 function plLabel(k: string): string | undefined {
@@ -131,6 +133,7 @@ export default function MailerApp() {
     try {
       const r = await api<{ id: string; record: ClientRecord }>(`/api/clients?id=${encodeURIComponent(id)}`);
       setClientId(r.id); setClient(r.record); setDirty(false); setNotice(null); setToOverride('');
+      setTemplate((cur) => suggestedTemplate(r.record, cur) ?? cur);
       if (typeof r.record.from === 'string' && r.record.from) setFromSel(r.record.from);
     } catch (e) { setNotice({ kind: 'err', text: (e as Error).message }); }
   }, []);
@@ -157,6 +160,7 @@ export default function MailerApp() {
     try {
       const r = await api<{ id: string; record: ClientRecord; notes: string[]; existed: boolean }>('/api/generate', { method: 'POST', body: JSON.stringify({ host }) });
       setClientId(r.id); setClient(r.record); setDirty(false); setShowBench(false); setToOverride('');
+      setTemplate((cur) => suggestedTemplate(r.record, cur) ?? cur);
       setClients(await api<ClientRow[]>('/api/clients'));
       setNotice({ kind: r.existed ? 'ok' : 'warn', text: r.notes.join(' · ') });
     } catch (e) { setNotice({ kind: 'err', text: (e as Error).message }); }
@@ -168,7 +172,7 @@ export default function MailerApp() {
     if (!raw) return;
     const host = raw.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '');
     if (!/^[a-z0-9.-]+\.[a-z]{2,}$/.test(host)) { setNotice({ kind: 'err', text: `To nie wygląda na domenę: ${raw}` }); return; }
-    const record: ClientRecord = { customer: host, to: '', 'firma.no': host, 'company.no': host, templates: {}, notes: '' };
+    const record: ClientRecord = { customer: host, to: '', 'company.no': host, LISTED: '', templates: {}, notes: '' };
     for (const t of templates) for (const k of t.placeholders) if (!(k in record) && !defaults[t.name]?.[k]) record[k] = '';
     try {
       await api('/api/clients', { method: 'PUT', body: JSON.stringify({ id: host, record, create: true }) });
@@ -228,7 +232,7 @@ export default function MailerApp() {
   const unusedKeys = useMemo(() => new Set(Object.keys(vars).filter((k) => !META.includes(k) && k !== 'attachments' && k !== 'from' && !(tpl?.placeholders ?? []).includes(k))), [tpl, vars]);
   const scoped = (k: string) => k === 'subject' || (client?.templates?.[template] && k in client.templates[template]) || (defaults[template] && k in defaults[template]);
   const isLong = (k: string) => k.length > 30 || /OBSERV|FUNN|FINDING|TID/.test(k);
-  const canSend = !!rendered && rendered.leftovers.length === 0 && !!vars.subject;
+  const canSend = !!rendered && rendered.leftovers.length === 0 && !rendered.blocked && !!vars.subject;
   const finalTo = toOverride || str(vars.to);
 
   return (
@@ -357,6 +361,7 @@ export default function MailerApp() {
         </div>
         <div className="sendbar">
           {notice && <div className={`notice ${notice.kind}`}>{notice.text}</div>}
+          {rendered?.blocked && <div className="notice err">Wysyłka zablokowana: {rendered.blocked}</div>}
           <div className="subject">{vars.subject || <span className="muted">brak tematu</span>}</div>
           <div className="row">
             <button className="btn" disabled={!canSend || busy || !sender?.testTo} onClick={() => send('test')}>
@@ -377,7 +382,7 @@ export default function MailerApp() {
             <strong>Wysyłka do klienta</strong>
             <div>Mail „{template}” pójdzie od <b>{fromLabel}</b> na <b>{finalTo}</b>. Zostanie zapisany w Wysłane i zalogowany w customers/{customer}/mailer-log.txt.{dirty && <> <b>Rekord ma niezapisane zmiany</b> — wysyłka użyje ich, ale zapisz po wysyłce.</>}</div>
             <div>Żeby potwierdzić, wpisz domenę klienta: <span className="mono">{customer}</span></div>
-            <input type="text" value={confirmText} onChange={(e) => setConfirmText(e.target.value)} autoFocus onKeyDown={(e) => e.key === 'Enter' && confirmText.trim().toLowerCase() === customer.toLowerCase() && send('really')} />
+            <input type="text" value={confirmText} onChange={(e) => setConfirmText(e.target.value)} autoFocus onKeyDown={(e) => e.key === 'Enter' && !busy && confirmText.trim().toLowerCase() === customer.toLowerCase() && send('really')} />
             <div className="row" style={{ justifyContent: 'flex-end' }}>
               <button className="btn" disabled={busy} onClick={() => setConfirmOpen(false)}>Anuluj</button>
               <button className="btn danger" disabled={busy || confirmText.trim().toLowerCase() !== customer.toLowerCase()} onClick={() => send('really')}>

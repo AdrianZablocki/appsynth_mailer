@@ -1,5 +1,5 @@
 import { readTemplate, readDefaults } from '@/lib/store';
-import { effectiveVars, type ClientRecord } from '@/lib/effective';
+import { effectiveVars, listClaimBlock, type ClientRecord } from '@/lib/effective';
 import { render } from '@/lib/render';
 import { sendMail, senderInfo, type SendMode } from '@/lib/send';
 import { ok, fail, guard } from '@/lib/api';
@@ -41,6 +41,9 @@ export async function POST(req: Request) {
     if (!template || !record || !mode) throw new Error('Brak template/record/mode');
     const customer = record.customer ?? '';
     if (!customer) throw new Error('record.customer jest puste — nie wiem, do kogo to jest');
+    if (mode !== 'test' && mode !== 'really') return fail(`Nieznany tryb wysyłki: ${String(mode)}`, 400);
+    const blocked = listClaimBlock(template, record);
+    if (blocked) return fail(blocked, 422);
     if (mode === 'really' && (body.confirm ?? '').trim().toLowerCase() !== customer.toLowerCase())
       return fail(`Potwierdzenie nie zgadza się z domeną klienta (${customer})`, 412);
     const vars = effectiveVars(record, template, readDefaults());
