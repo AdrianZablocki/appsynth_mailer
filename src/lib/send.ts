@@ -61,6 +61,8 @@ export async function sendMail(opts: {
   from?: string;
   /** załączniki wgrane z przeglądarki (nie zapisywane na dysku) */
   uploads?: { filename: string; content: Buffer }[];
+  /** Message-ID maila, na który to odpowiedź (follow-up → cold mail), żeby trafił do tego samego wątku */
+  inReplyTo?: string;
 }): Promise<SendResult> {
   loadMailerEnv();
   const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, TEST_TO, IMAP_HOST } = process.env;
@@ -72,7 +74,7 @@ export async function sendMail(opts: {
   if (!to) throw new Error(test ? 'Brak TEST_TO w mailer/.env' : 'Brak adresata');
 
   const attachments: { path?: string; filename?: string; content?: Buffer }[] = [
-    ...(opts.vars.attachments ?? []).map((rel) => ({ path: attachmentPath(rel) })),
+    ...(opts.vars.attachments ?? []).map((rel) => ({ path: attachmentPath(rel, opts.customer) })),
     ...(opts.uploads ?? []).map((u) => ({ filename: u.filename, content: u.content })),
   ];
   const port = Number(SMTP_PORT ?? 465);
@@ -88,36 +90,44 @@ export async function sendMail(opts: {
     text: opts.text,
     html: opts.html,
     attachments,
+    ...(opts.inReplyTo ? { inReplyTo: opts.inReplyTo, references: [opts.inReplyTo] } : {}),
   };
   const info = await transport.sendMail(message);
+
+  // Log od razu po SMTP, przed kopią IMAP (do 65 s) — jeśli funkcja padnie później, wysyłka i tak jest w historii,
+  // a serwer odrzuci ponowną wysyłkę tego samego szablonu.
+  let logged = false;
+  if (!test) {
+    try {
+      await appendLog(opts.customer, `${new Date().toISOString()} | ${opts.templateName} | from=${sender.address} | to=${to} | messageId=${info.messageId} | subject=${opts.subject}`);
+      logged = true;
+    } catch (e) { console.error('log:', e); }
+  }
   writeOut(`${opts.customer || 'bez-klienta'}-${opts.templateName}${test ? '-TEST' : ''}-${new Date().toISOString().slice(0, 10)}`, opts.html);
 
   let imap: SendResult['imap'] = null;
   if (IMAP_HOST) {
     try {
-      const raw = await nodemailer.createTransport({ streamTransport: true, buffer: true }).sendMail(message);
+      // ten sam Message-ID co wysłany mail — inaczej kopia w Wysłane i odpowiedzi klienta nie łączą się w wątek
+      const raw = await nodemailer.createTransport({ streamTransport: true, buffer: true }).sendMail({ ...message, messageId: info.messageId });
       const client = new ImapFlow({
         host: IMAP_HOST, port: Number(process.env.IMAP_PORT ?? 993), secure: true,
         auth: { user: SMTP_USER, pass: SMTP_PASSWORD }, logger: false,
       });
-      await withTimeout(client.connect(), 15000);
-      const boxes = await withTimeout(client.list(), 15000);
-      const sent =
-        boxes.find((b) => b.specialUse === '\\Sent')?.path ??
-        boxes.find((b) => /^(sent|wys[łl]ane|sent items)$/i.test(b.name))?.path ??
-        process.env.IMAP_SENT_FOLDER ?? 'Sent';
-      await withTimeout(client.append(sent, raw.message as Buffer, ['\\Seen']), 30000);
-      await withTimeout(client.logout(), 5000).catch(() => client.close());
-      imap = { ok: true, folder: sent };
+      try {
+        await withTimeout(client.connect(), 10000);
+        const boxes = await withTimeout(client.list(), 10000);
+        const sent =
+          boxes.find((b) => b.specialUse === '\\Sent')?.path ??
+          boxes.find((b) => /^(sent|wys[łl]ane|sent items)$/i.test(b.name))?.path ??
+          process.env.IMAP_SENT_FOLDER ?? 'Sent';
+        await withTimeout(client.append(sent, raw.message as Buffer, ['\\Seen']), 25000);
+        await withTimeout(client.logout(), 3000).catch(() => client.close());
+        imap = { ok: true, folder: sent };
+      } catch (e) { client.close(); throw e; }
     } catch (e) {
       imap = { ok: false, error: (e as Error).message };
     }
-  }
-
-  let logged = false;
-  if (!test) {
-    await appendLog(opts.customer, `${new Date().toISOString()} | ${opts.templateName} | from=${sender.address} | to=${to} | subject=${opts.subject}`).catch((e) => console.error('log:', e));
-    logged = true;
   }
 
   return {

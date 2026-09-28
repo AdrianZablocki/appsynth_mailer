@@ -19,11 +19,16 @@ export const META_KEYS = new Set(['subject', 'to', 'from', 'customer', 'attachme
 
 export const str = (v: unknown): string => (typeof v === 'string' ? v : '');
 
-/** Podmiana [PLACEHOLDERÓW] w dowolnym tekście (dłuższe klucze najpierw). */
-export function fill(text: string, vars: Record<string, Scalar>): string {
-  const keys = Object.keys(vars).filter((k) => !META_KEYS.has(k) && typeof vars[k] === 'string' && vars[k] !== '').sort((a, b) => b.length - a.length);
+const escapeHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+/**
+ Podmiana [PLACEHOLDERÓW] w dowolnym tekście (dłuższe klucze najpierw). Wartość z samych spacji = niewypełniona.
+ html: true — wartości są escapowane (np. FINDING «language tag (<html lang>)» nie znika jako tag, «&» nie psuje HTML).
+*/
+export function fill(text: string, vars: Record<string, Scalar>, opts: { html?: boolean } = {}): string {
+  const keys = Object.keys(vars).filter((k) => !META_KEYS.has(k) && typeof vars[k] === 'string' && (vars[k] as string).trim() !== '').sort((a, b) => b.length - a.length);
   let out = text;
-  for (const k of keys) out = out.split(`[${k}]`).join(vars[k] as string);
+  for (const k of keys) out = out.split(`[${k}]`).join(opts.html ? escapeHtml(vars[k] as string) : (vars[k] as string));
   return out;
 }
 

@@ -78,6 +78,9 @@ async function blobPutText(pathname: string, text: string, contentType: string) 
   await put(pathname, text, { access: 'private', addRandomSuffix: false, allowOverwrite: true, contentType });
 }
 
+/** Nazwa firmy do listy klientów: COMPANY (od 24.09), FIRMA w starszych rekordach. */
+const companyName = (r: ClientRecord) => (typeof r.COMPANY === 'string' ? r.COMPANY : typeof r.FIRMA === 'string' ? r.FIRMA : '');
+
 export async function listClients(): Promise<{ id: string; customer: string; firma: string; mtime: number }[]> {
   if (USE_BLOB) {
     const { list } = await import('@vercel/blob');
@@ -91,9 +94,9 @@ export async function listClients(): Promise<{ id: string; customer: string; fir
       }
       cursor = page.hasMore ? page.cursor : undefined;
     } while (cursor);
-    // FIRMA do listy: rekordy są małe, pobieramy równolegle
+    // nazwa firmy do listy: rekordy są małe, pobieramy równolegle
     await Promise.all(out.map(async (row) => {
-      try { const r = JSON.parse((await blobGetText(blobKey(row.id))) ?? '{}') as ClientRecord; row.customer = r.customer ?? row.id; row.firma = typeof r.FIRMA === 'string' ? r.FIRMA : ''; } catch { /* zepsuty json */ }
+      try { const r = JSON.parse((await blobGetText(blobKey(row.id))) ?? '{}') as ClientRecord; row.customer = r.customer ?? row.id; row.firma = companyName(r); } catch { /* zepsuty json */ }
     }));
     return out.sort((a, b) => b.mtime - a.mtime);
   }
@@ -105,7 +108,7 @@ export async function listClients(): Promise<{ id: string; customer: string; fir
       const id = f.replace(/\.json$/, '');
       const p = resolve(clientsDir(), f);
       let customer = id, firma = '';
-      try { const r = JSON.parse(readFileSync(p, 'utf8')) as ClientRecord; customer = r.customer ?? id; firma = typeof r.FIRMA === 'string' ? r.FIRMA : ''; } catch { /* zepsuty json — pokazujemy i tak */ }
+      try { const r = JSON.parse(readFileSync(p, 'utf8')) as ClientRecord; customer = r.customer ?? id; firma = companyName(r); } catch { /* zepsuty json — pokazujemy i tak */ }
       return { id, customer, firma, mtime: statSync(p).mtimeMs };
     })
     .sort((a, b) => b.mtime - a.mtime);
@@ -149,10 +152,17 @@ export function writeOut(name: string, html: string): string {
   return p;
 }
 
-/** Ścieżka załącznika względem katalogu audit. */
-export function attachmentPath(rel: string): string {
+/**
+ Ścieżka załącznika względem katalogu audit. Dozwolone tylko PDF/PNG/JPG z customers/<ten klient>/ albo mailer/uploads/ —
+ rekord skopiowany od innego klienta nie wyśle cudzego raportu, a ścieżka typu mailer/.env w ogóle nie przejdzie.
+*/
+export function attachmentPath(rel: string, customer: string): string {
   const p = resolve(AUDIT_ROOT, rel);
-  if (!p.startsWith(AUDIT_ROOT + '/')) throw new Error(`Załącznik poza katalogiem audit: ${rel}`);
+  if (!/\.(pdf|png|jpe?g)$/i.test(p)) throw new Error(`Niedozwolony typ załącznika: ${rel}`);
+  const allowed = [resolve(MAILER_ROOT, 'uploads')];
+  if (customer) allowed.push(resolve(AUDIT_ROOT, 'customers', safeName(customer)));
+  if (!allowed.some((dir) => p.startsWith(dir + '/')))
+    throw new Error(`Załącznik spoza customers/${customer || '<klient>'}/ i mailer/uploads/: ${rel}`);
   if (!existsSync(p)) throw new Error(`Brak załącznika: ${rel}`);
   return p;
 }
@@ -189,6 +199,18 @@ export async function appendLog(customer: string, line: string): Promise<void> {
   const target = existsSync(dir) ? resolve(dir, 'mailer-log.txt') : resolve(MAILER_ROOT, 'out', 'mailer-log.txt');
   mkdirSync(resolve(MAILER_ROOT, 'out'), { recursive: true });
   appendFileSync(target, text);
+}
+
+/** Wpisy logu dla szablonu: data i Message-ID (od 2026-09-28 w logu; starsze wpisy bez niego). */
+export function sentEntries(log: string[], template: string): { at: string; messageId: string; subject: string }[] {
+  return log
+    .map((l) => l.split(' | '))
+    .filter((p) => p[1] === template)
+    .map((p) => ({
+      at: p[0],
+      messageId: p.find((x) => x.startsWith('messageId='))?.slice('messageId='.length) ?? '',
+      subject: p.find((x) => x.startsWith('subject='))?.slice('subject='.length) ?? '',
+    }));
 }
 
 export async function readLog(customer: string): Promise<string[]> {

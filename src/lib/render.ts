@@ -1,5 +1,5 @@
 import { htmlToText } from 'html-to-text';
-import { fill, type Vars } from './effective';
+import { fill, META_KEYS, type Vars } from './effective';
 export { META_KEYS } from './effective';
 
 /** Usuwa komentarz nagłówkowy szablonu (instrukcja dla webmaila). */
@@ -13,8 +13,11 @@ export function placeholders(template: string): string[] {
 }
 
 export function render(template: string, vars: Vars) {
-  const html = fill(stripHeaderComment(template), vars);
-  const leftovers = [...new Set(html.match(/\[[A-ZÆØÅ0-9][^\]\n]{0,140}\]/g) ?? [])];
+  const body = stripHeaderComment(template);
+  const html = fill(body, vars, { html: true });
+  // placeholdery szablonu, które zostały w treści (też małymi literami, np. [company.no]) + ogólny wzorzec [WIELKIE]
+  const fromTemplate = placeholders(body).filter((k) => !META_KEYS.has(k) && html.includes(`[${k}]`)).map((k) => `[${k}]`);
+  const leftovers = [...new Set([...fromTemplate, ...(html.match(/\[[A-ZÆØÅ0-9][^\]\n]{0,140}\]/g) ?? [])])];
   const text = htmlToText(html, { wordwrap: 78, selectors: [{ selector: 'a', options: { hideLinkHrefIfSameAsText: true } }] });
   return { html, text, leftovers };
 }

@@ -85,6 +85,7 @@ export default function MailerApp() {
   const [showBench, setShowBench] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmText, setConfirmText] = useState('');
+  const [resend, setResend] = useState(false);
   const [toOverride, setToOverride] = useState('');
 
   const tpl = templates.find((t) => t.name === template);
@@ -205,7 +206,7 @@ export default function MailerApp() {
     if (!outgoing) return;
     setBusy(true); setNotice(null);
     try {
-      const payload = { template, record: outgoing, mode, to: toOverride || undefined, confirm: confirmText };
+      const payload = { template, record: outgoing, mode, to: toOverride || undefined, confirm: confirmText, resend: mode === 'really' && resend };
       let r: SendResult;
       if (uploads.length) {
         const fd = new FormData(); fd.append('payload', JSON.stringify(payload)); for (const f of uploads) fd.append('files', f);
@@ -217,7 +218,9 @@ export default function MailerApp() {
       const imap = r.imap == null ? '' : r.imap.ok ? ` · kopia w „${r.imap.folder}”` : ` · kopia do Wysłane NIE zapisana (${r.imap.error})`;
       const att = r.attachments.length ? ` · załączniki: ${r.attachments.join(', ')}` : '';
       setNotice({ kind: 'ok', text: `Wysłano z ${r.from} do ${r.to} (${r.messageId})${att}${imap}${r.logged ? ' · zalogowano' : ''}` });
-      setConfirmOpen(false); setConfirmText(''); setUploads([]);
+      // po teście załączniki zostają — prawdziwa wysyłka zwykle idzie zaraz po nim, z tym samym PDF-em
+      setConfirmOpen(false); setConfirmText(''); setResend(false);
+      if (mode === 'really') setUploads([]);
       if (mode === 'really') setLog(await api<string[]>(`/api/log?customer=${encodeURIComponent(customer)}`));
     } catch (e) { setNotice({ kind: 'err', text: (e as Error).message }); }
     finally { setBusy(false); }
@@ -234,6 +237,10 @@ export default function MailerApp() {
   const isLong = (k: string) => k.length > 30 || /OBSERV|FUNN|FINDING|TID/.test(k);
   const canSend = !!rendered && rendered.leftovers.length === 0 && !rendered.blocked && !!vars.subject;
   const finalTo = toOverride || str(vars.to);
+  const attachmentNames = [...(vars.attachments ?? []).map((a) => a.split('/').pop() ?? a), ...uploads.map((f) => f.name)];
+  /** daty wcześniejszych wysyłek tego szablonu do klienta (z logu: „data | szablon | …”) */
+  const alreadySent = log.map((l) => l.split(' | ')).filter((p) => p[1] === template).map((p) => p[0].slice(0, 16).replace('T', ' '));
+  const sendBlocked = alreadySent.length > 0 && !resend;
 
   return (
     <div className="app">
@@ -368,11 +375,11 @@ export default function MailerApp() {
               {busy ? 'Wysyłam…' : `Wyślij test → ${sender?.testTo || 'brak TEST_TO'}`}
             </button>
             <input className="grow" type="text" placeholder={vars.to ? `do: ${vars.to}` : 'adres klienta (nadpisuje "to")'} value={toOverride} onChange={(e) => setToOverride(e.target.value)} />
-            <button className="btn primary" disabled={!canSend || busy || !finalTo || !customer} onClick={() => { setConfirmText(''); setConfirmOpen(true); }}>
+            <button className="btn primary" disabled={!canSend || busy || !finalTo || !customer} onClick={() => { setConfirmText(''); setResend(false); setConfirmOpen(true); }}>
               Wyślij do klienta…
             </button>
           </div>
-          {((vars.attachments ?? []).length > 0 || uploads.length > 0) && <div className="muted mono">załączniki: {[...(vars.attachments ?? []).map((a) => a.split('/').pop()), ...uploads.map((f) => f.name)].join(', ')}</div>}
+          {attachmentNames.length > 0 && <div className="muted mono">załączniki: {attachmentNames.join(', ')}</div>}
         </div>
       </section>
 
@@ -381,11 +388,18 @@ export default function MailerApp() {
           <div onClick={(e) => e.stopPropagation()}>
             <strong>Wysyłka do klienta</strong>
             <div>Mail „{template}” pójdzie od <b>{fromLabel}</b> na <b>{finalTo}</b>. Zostanie zapisany w Wysłane i zalogowany w customers/{customer}/mailer-log.txt.{dirty && <> <b>Rekord ma niezapisane zmiany</b> — wysyłka użyje ich, ale zapisz po wysyłce.</>}</div>
+            <div>Załączniki: {attachmentNames.length ? <b>{attachmentNames.join(', ')}</b> : <b>brak</b>}</div>
+            {alreadySent.length > 0 && (
+              <div className="notice warn">
+                „{template}” już poszedł do {customer}: {alreadySent.join(', ')}.
+                <label className="row" style={{ gap: 6, marginTop: 6 }}><input type="checkbox" style={{ width: 'auto' }} checked={resend} onChange={(e) => setResend(e.target.checked)} /> wyślij ponownie (celowo)</label>
+              </div>
+            )}
             <div>Żeby potwierdzić, wpisz domenę klienta: <span className="mono">{customer}</span></div>
-            <input type="text" value={confirmText} onChange={(e) => setConfirmText(e.target.value)} autoFocus onKeyDown={(e) => e.key === 'Enter' && !busy && confirmText.trim().toLowerCase() === customer.toLowerCase() && send('really')} />
+            <input type="text" value={confirmText} onChange={(e) => setConfirmText(e.target.value)} autoFocus onKeyDown={(e) => e.key === 'Enter' && !busy && !sendBlocked && confirmText.trim().toLowerCase() === customer.toLowerCase() && send('really')} />
             <div className="row" style={{ justifyContent: 'flex-end' }}>
               <button className="btn" disabled={busy} onClick={() => setConfirmOpen(false)}>Anuluj</button>
-              <button className="btn danger" disabled={busy || confirmText.trim().toLowerCase() !== customer.toLowerCase()} onClick={() => send('really')}>
+              <button className="btn danger" disabled={busy || sendBlocked || confirmText.trim().toLowerCase() !== customer.toLowerCase()} onClick={() => send('really')}>
                 {busy ? 'Wysyłam…' : 'Wyślij naprawdę'}
               </button>
             </div>

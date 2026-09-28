@@ -1,4 +1,4 @@
-import { readTemplate, readDefaults } from '@/lib/store';
+import { readTemplate, readDefaults, readLog, sentEntries } from '@/lib/store';
 import { effectiveVars, listClaimBlock, type ClientRecord } from '@/lib/effective';
 import { render } from '@/lib/render';
 import { sendMail, senderInfo, type SendMode } from '@/lib/send';
@@ -12,13 +12,17 @@ export async function GET() {
   try { return ok(senderInfo()); } catch (e) { return fail(e, 500); }
 }
 
-type SendBody = { template: string; record: ClientRecord; mode: SendMode; to?: string; confirm?: string };
+type SendBody = { template: string; record: ClientRecord; mode: SendMode; to?: string; confirm?: string; resend?: boolean };
+const ONE_ADDRESS = /^[^\s@<>,;]+@[^\s@<>,;]+\.[a-z]{2,}$/i;
+/** Szablony, na które follow-up odpowiada w wątku (In-Reply-To = Message-ID ostatniego z nich). */
+const THREAD_PARENTS = ['cold-mail', 'cold-mail-listed'];
 const MAX_UPLOAD = 15 * 1024 * 1024;
 
 /**
- POST JSON { template, record, mode: 'test'|'really', to?, confirm? }
+ POST JSON { template, record, mode: 'test'|'really', to?, confirm?, resend? }
  albo multipart: pole `payload` (ten sam JSON) + pliki `files` (załączniki z przeglądarki, tylko w pamięci, PDF/PNG/JPG ≤15 MB).
- Serwer sam liczy skuteczne vars z rekordu + defaults. mode=really wymaga confirm === record.customer (odpowiednik --really).
+ Serwer sam liczy skuteczne vars z rekordu + defaults. mode=really wymaga confirm === record.customer (odpowiednik --really)
+ i odrzuca (409) szablon, który już jest w logu klienta, chyba że resend=true. follow-up idzie w wątku cold maila.
 */
 export async function POST(req: Request) {
   const denied = await guard(); if (denied) return denied;
@@ -50,8 +54,17 @@ export async function POST(req: Request) {
     const r = render(readTemplate(template), vars);
     if (r.leftovers.length) return fail(`Niewypełnione pola: ${r.leftovers.join(', ')}`, 422);
     if (!vars.subject) throw new Error('Brak "subject"');
-    const to = mode === 'test' ? undefined : (body.to || vars.to);
-    const result = await sendMail({ mode, to, from: vars.from, subject: vars.subject, html: r.html, text: r.text, vars, templateName: template, customer, uploads });
+    const to = mode === 'test' ? undefined : (body.to || vars.to)?.trim();
+    if (mode === 'really' && (!to || !ONE_ADDRESS.test(to))) return fail(`Adres odbiorcy musi być jednym adresem e-mail: ${to ?? '(pusty)'}`, 422);
+    const log = await readLog(customer);
+    if (mode === 'really' && !body.resend) {
+      const prev = sentEntries(log, template);
+      if (prev.length) return fail(`„${template}” już poszedł do ${customer} (${prev[prev.length - 1].at}). Zaznacz „wyślij ponownie”, jeśli to celowe.`, 409);
+    }
+    const inReplyTo = template === 'follow-up'
+      ? THREAD_PARENTS.flatMap((t) => sentEntries(log, t)).filter((e) => e.messageId).sort((a, b) => a.at.localeCompare(b.at)).pop()?.messageId
+      : undefined;
+    const result = await sendMail({ mode, to, from: vars.from, subject: vars.subject, html: r.html, text: r.text, vars, templateName: template, customer, uploads, inReplyTo });
     return ok(result);
   } catch (e) { return fail(e); }
 }
