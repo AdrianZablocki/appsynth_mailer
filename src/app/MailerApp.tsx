@@ -53,6 +53,26 @@ function plLabel(k: string): string | undefined {
   return undefined;
 }
 
+/** Etykieta nad polem i podpowiedź pod nim: PL_LABELS trzyma „Etykieta (podpowiedź)” albo „Etykieta — podpowiedź”. */
+function labelParts(k: string): { label: string; hint?: string } {
+  const full = plLabel(k);
+  if (!full) return { label: k };
+  const m = full.match(/^([^(—]*?)\s+(?:\(([\s\S]*)\)|—\s+([\s\S]*))$/);
+  if (!m) return { label: full };
+  return { label: m[1], hint: (m[2] ?? m[3])?.trim() };
+}
+
+/** Linia logu „ISO | szablon | from=… | to=… | messageId=… | subject=…” → wpis historii. */
+function parseLog(line: string): { when: string; template: string; note: string; to: string; subject: string } {
+  const p = line.split(' | ');
+  const kv = (prefix: string) => p.find((x) => x.startsWith(prefix))?.slice(prefix.length) ?? '';
+  const d = new Date(p[0]);
+  const when = isNaN(d.getTime()) ? p[0] : `${d.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit' })} · ${d.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}`;
+  // „correction (reply, manual script)” → plakietka „correction”, dopisek przy adresacie
+  const t = (p[1] ?? '').match(/^([^(]*?)\s*(?:\((.*)\))?$/);
+  return { when, template: t?.[1] || p[1] || '', note: t?.[2] ?? '', to: kv('to='), subject: kv('subject=') || p.slice(2).join(' | ') };
+}
+
 async function api<T>(url: string, init?: RequestInit): Promise<T> {
   const r = await fetch(url, { ...init, headers: { 'content-type': 'application/json', ...(init?.headers ?? {}) } });
   const j = await r.json();
@@ -243,163 +263,222 @@ export default function MailerApp() {
   const alreadySent = log.map((l) => l.split(' | ')).filter((p) => p[1] === template).map((p) => p[0].slice(0, 16).replace('T', ' '));
   const sendBlocked = alreadySent.length > 0 && !resend;
 
+  const field = (k: string, kind: 'meta' | 'tpl') => {
+    const { label, hint } = labelParts(k);
+    const id = `f-${k.replace(/[^a-z0-9]+/gi, '-')}`;
+    const unused = kind === 'tpl' && unusedKeys.has(k);
+    return (
+      <div key={k} className={`field ${!str(vars[k]) ? 'empty' : ''} ${unused ? 'unused' : ''}`}>
+        <div className="field-head">
+          <label htmlFor={id}>{label}</label>
+          <span className="key">{kind === 'tpl' ? `[${k}]` : k}{scoped(k) && ` · ${template}`}</span>
+        </div>
+        {kind === 'tpl' && isLong(k)
+          ? <textarea id={id} className="input" value={str(vars[k])} onChange={(e) => setField(k, e.target.value)} />
+          : <input id={id} className="input" type="text" value={str(vars[k])} onChange={(e) => setField(k, e.target.value)} readOnly={k === 'customer'} />}
+        {(hint || unused) && <span className="hint">{unused ? 'Klucz z rekordu, nieużywany w tym szablonie.' : hint}</span>}
+      </div>
+    );
+  };
+  const history = log.slice().reverse().map(parseLog);
+  const companyName = str(client?.COMPANY) || clientId;
+
   return (
     <div className="app">
       <header className="top">
-        <span className="brand">AppSynth mailer</span>
+        <div className="brand">
+          {/* eslint-disable-next-line @next/next/no-img-element -- statyczny 60 px PNG, bez optymalizacji */}
+          <img src="/logo-nav.png" alt="" width={26} height={26} />
+          <b>AppSynth</b>
+          <span className="eyebrow">Mailer</span>
+        </div>
         {senderList.length ? (
-          <label className="from row" style={{ gap: 6 }}>od:
-            <select value={fromAddr} onChange={(e) => { setFromSel(e.target.value); setDirty(true); }} style={{ width: 'auto', padding: '4px 8px' }}>
+          <label className="from">
+            <span className="eyebrow">Od</span>
+            <select className="input" value={fromAddr} onChange={(e) => { setFromSel(e.target.value); setDirty(true); }}>
               {senderList.map((s) => <option key={s.address} value={s.address}>{s.name ? `${s.name} <${s.address}>` : s.address}</option>)}
             </select>
           </label>
-        ) : <span className="from">brak konfiguracji SMTP w mailer/.env</span>}
+        ) : <span className="badge coral">brak konfiguracji SMTP w mailer/.env</span>}
         <span className="spacer" />
-        <span className="muted">test → {sender?.testTo || '—'}</span>
+        <span className="test">test → {sender?.testTo || '—'}</span>
         <UserButton />
       </header>
 
-      {/* LEWA: klienci, szablon, benchmark, log */}
-      <aside className="col">
-        <h2>Klienci</h2>
-        <div className="list">
-          {clients.map((c) => (
-            <button key={c.id} className={`item ${c.id === clientId ? 'active' : ''}`} onClick={() => loadClient(c.id)}>
-              <span>{c.customer}{c.firma && <><br /><small>{c.firma}</small></>}</span><small>{new Date(c.mtime).toLocaleDateString('pl-PL')}</small>
-            </button>
-          ))}
-          {clients.length === 0 && <span className="muted">brak klientów</span>}
-        </div>
-        <button className="btn" style={{ marginTop: 8 }} onClick={createManual}>+ Nowy klient ręcznie</button>
-
-        <h2>Nowy klient z benchmarku</h2>
-        {!showBench ? (
-          <button className="btn" onClick={() => setShowBench(true)}>Wybierz firmę (fala 2, v0.4)</button>
-        ) : (
-          <>
-            <input type="text" placeholder="domena, nazwa lub gmina…" value={benchQ} onChange={(e) => setBenchQ(e.target.value)} autoFocus />
-            <div className="bench" style={{ marginTop: 6 }}>
-              {bench.map((b) => (
-                <button key={b.host} className="item" disabled={b.unreachable} onClick={() => generate(b.host)} title={b.navn}>
-                  <span>{b.host}<br /><small>{b.navn} · {b.kommune}</small></span>
-                  <small>{b.score ?? '—'}</small>
+      <div className="grid">
+        {/* LEWA: klienci, benchmark, szablon, historia */}
+        <aside className="col side">
+          <section>
+            <div className="sec-head"><span className="eyebrow">Klienci</span><span className="mono muted">{clients.length}</span></div>
+            <div className="list">
+              {clients.map((c) => (
+                <button key={c.id} className={`item ${c.id === clientId ? 'active' : ''}`} onClick={() => loadClient(c.id)}>
+                  <span className="main"><b>{c.customer}</b>{c.firma && <small>{c.firma}</small>}</span>
+                  <span className="aside">{new Date(c.mtime).toLocaleDateString('pl-PL')}</span>
                 </button>
               ))}
-              {bench.length === 0 && <div className="muted" style={{ padding: 8 }}>brak wyników</div>}
+              {clients.length === 0 && <span className="muted" style={{ padding: '0 12px', fontSize: 13 }}>brak klientów</span>}
             </div>
-            <div className="muted" style={{ marginTop: 6, fontSize: 12 }}>Domyślnie: wszystkie od najsłabszych. Kliknięcie tworzy rekord klienta (istniejącego nie nadpisuje).</div>
-            <button className="btn" style={{ marginTop: 6 }} onClick={() => setShowBench(false)}>Zamknij</button>
-          </>
-        )}
+            <div style={{ paddingTop: 6 }}><button className="btn ghost sm" onClick={createManual}>+ Nowy klient ręcznie</button></div>
+          </section>
 
-        <h2>Szablon</h2>
-        <select value={template} onChange={(e) => setTemplate(e.target.value)}>
-          {templates.map((t) => <option key={t.name} value={t.name}>{t.name}</option>)}
-        </select>
+          <section>
+            <span className="eyebrow" style={{ padding: '0 4px' }}>Z benchmarku</span>
+            {!showBench ? (
+              <div><button className="btn ghost sm" onClick={() => setShowBench(true)}>Wybierz firmę · fala 2, v0.4</button></div>
+            ) : (
+              <>
+                <input className="input" type="text" placeholder="domena, nazwa lub gmina…" value={benchQ} onChange={(e) => setBenchQ(e.target.value)} autoFocus />
+                <div className="bench">
+                  {bench.map((b) => (
+                    <button key={b.host} className="item" disabled={b.unreachable} onClick={() => generate(b.host)} title={b.navn}>
+                      <span className="main"><b>{b.host}</b><small>{b.navn} · {b.kommune}</small></span>
+                      <span className="aside">{b.score ?? '—'}</span>
+                    </button>
+                  ))}
+                  {bench.length === 0 && <div className="muted" style={{ padding: 12, fontSize: 13 }}>brak wyników</div>}
+                </div>
+                <span className="hint muted" style={{ fontSize: 13, lineHeight: '18px' }}>Domyślnie: wszystkie od najsłabszych. Kliknięcie tworzy rekord klienta (istniejącego nie nadpisuje).</span>
+                <div><button className="btn ghost sm" onClick={() => setShowBench(false)}>Zamknij</button></div>
+              </>
+            )}
+          </section>
 
-        <h2>Historia wysyłek {customer && <span className="mono">({customer})</span>}</h2>
-        <div className="log">{log.length ? log.slice().reverse().join('\n') : <span className="muted">brak wysyłek do klienta</span>}</div>
-      </aside>
+          <section>
+            <label className="eyebrow" htmlFor="tpl" style={{ padding: '0 4px' }}>Szablon</label>
+            <select id="tpl" className="input" value={template} onChange={(e) => setTemplate(e.target.value)}>
+              {templates.map((t) => <option key={t.name} value={t.name}>{t.name}</option>)}
+            </select>
+          </section>
 
-      {/* ŚRODEK: formularz */}
-      <section className="col">
-        <div className="row" style={{ marginBottom: 12 }}>
-          <strong className="grow">{clientId ? `clients/${clientId}.json` : 'wybierz klienta albo firmę z benchmarku'}{dirty && ' *'}</strong>
-          <button className="btn" disabled={!dirty || !client} onClick={save}>Zapisz</button>
-          {clientId && <button className="btn" title="Usuń rekord klienta (historia wysyłek zostaje)" onClick={removeClient}>Usuń</button>}
-        </div>
+          <section>
+            <span className="eyebrow" style={{ padding: '0 4px' }}>Historia wysyłek{customer && ` · ${customer}`}</span>
+            <div className="history">
+              {history.length === 0 && <div className="empty">{customer ? 'brak wysyłek do klienta' : 'wybierz klienta'}</div>}
+              {history.map((h, i) => (
+                <div key={i} className="entry">
+                  <div className="head">
+                    <span className={`badge ${h.template === template ? 'signal' : ''}`}>{h.template || '?'}</span>
+                    <span className="mono">{h.when}</span>
+                  </div>
+                  {h.subject && <span className="subject">{h.subject}</span>}
+                  {(h.to || h.note) && <span className="to">→ {[h.to, h.note].filter(Boolean).join(' · ')}</span>}
+                </div>
+              ))}
+            </div>
+          </section>
+        </aside>
 
-        {client && (
-          <>
-            <h2>Meta</h2>
-            {META.map((k) => (
-              <label key={k} className={`field ${!str(vars[k]) ? 'empty' : ''}`}>
-                <span>{plLabel(k) && <b className="pl">{plLabel(k)}</b>}<code>{k}</code>{scoped(k) && <em className="muted"> · dla szablonu {template}</em>}</span>
-                <input type="text" value={str(vars[k])} onChange={(e) => setField(k, e.target.value)} readOnly={k === 'customer'} />
-              </label>
-            ))}
-
-            <h2>Pola szablonu „{template}”</h2>
-            {fieldKeys.map((k) => (
-              <label key={k} className={`field ${!str(vars[k]) ? 'empty' : ''}`} title={unusedKeys.has(k) ? 'klucz nieużywany w tym szablonie' : undefined}>
-                <span>{plLabel(k) && <b className="pl">{plLabel(k)}</b>}<code>[{k}]</code>{scoped(k) && <em className="muted"> · dla szablonu {template}</em>}{unusedKeys.has(k) && <em className="muted"> · nieużywane w tym szablonie</em>}</span>
-                {isLong(k)
-                  ? <textarea value={str(vars[k])} onChange={(e) => setField(k, e.target.value)} />
-                  : <input type="text" value={str(vars[k])} onChange={(e) => setField(k, e.target.value)} />}
-              </label>
-            ))}
-
-            <h2>Załączniki <span className="muted">(dla szablonu {template} · {customer ? `customers/${customer}` : 'mailer/uploads'})</span></h2>
-            <label className="btn" style={{ display: 'inline-block', marginBottom: 8 }}>
-              Dodaj plik z dysku…
-              <input type="file" accept=".pdf,.png,.jpg,.jpeg" multiple style={{ display: 'none' }}
-                onChange={(e) => { for (const f of Array.from(e.target.files ?? [])) addUpload(f); e.target.value = ''; }} />
-            </label>
-            {uploads.map((f) => (
-              <label key={f.name} className="check">
-                <input type="checkbox" checked readOnly onChange={() => setUploads((u) => u.filter((x) => x !== f))} />
-                <span className="mono">{f.name} <em className="muted">· z dysku, tylko do tej wysyłki</em></span>
-              </label>
-            ))}
-            {files.length === 0 && uploads.length === 0 && <div className="muted">brak plików — dodaj z dysku{customer && ` albo wrzuć PDF do customers/${customer}/`}</div>}
-            {files.map((f) => (
-              <label key={f} className="check">
-                <input type="checkbox" checked={(vars.attachments ?? []).includes(f)} onChange={() => toggleAttachment(f)} />
-                <span className="mono">{customer ? f.replace(`customers/${customer}/`, '') : f}</span>
-              </label>
-            ))}
-
-            <h2>Notatki</h2>
-            <textarea value={str(client.notes)} onChange={(e) => { setClient({ ...client, notes: e.target.value }); setDirty(true); }} />
-          </>
-        )}
-      </section>
-
-      {/* PRAWA: podgląd + wysyłka */}
-      <section className="col">
-        <div className="tabs">
-          <button className={`tab ${tab === 'html' ? 'active' : ''}`} onClick={() => setTab('html')}>HTML</button>
-          <button className={`tab ${tab === 'text' ? 'active' : ''}`} onClick={() => setTab('text')}>Tekst</button>
-          {rendered && rendered.leftovers.length > 0 && <span className="notice warn" style={{ marginLeft: 'auto' }}>niewypełnione: {rendered.leftovers.join(' ')}</span>}
-        </div>
-        <div className="preview">
-          {!rendered ? <div className="muted" style={{ padding: 20 }}>Podgląd pojawi się po wybraniu klienta.</div>
-            : tab === 'html' ? <iframe title="podgląd" sandbox="" srcDoc={rendered.html} />
-            : <pre>{rendered.text}</pre>}
-        </div>
-        <div className="sendbar">
-          {notice && <div className={`notice ${notice.kind}`}>{notice.text}</div>}
-          {rendered?.blocked && <div className="notice err">Wysyłka zablokowana: {rendered.blocked}</div>}
-          <div className="subject">{vars.subject || <span className="muted">brak tematu</span>}</div>
-          <div className="row">
-            <button className="btn" disabled={!canSend || busy || !sender?.testTo} onClick={() => send('test')}>
-              {busy ? 'Wysyłam…' : `Wyślij test → ${sender?.testTo || 'brak TEST_TO'}`}
-            </button>
-            <input className="grow" type="text" placeholder={vars.to ? `do: ${vars.to}` : 'adres klienta (nadpisuje "to")'} value={toOverride} onChange={(e) => setToOverride(e.target.value)} />
-            <button className="btn primary" disabled={!canSend || busy || !finalTo || !customer} onClick={() => { setConfirmText(''); setResend(false); setConfirmOpen(true); }}>
-              Wyślij do klienta…
-            </button>
+        {/* ŚRODEK: formularz */}
+        <main className="col editor">
+          <div className="editor-head">
+            <div className="who">
+              <b>{clientId ? companyName : 'Wybierz klienta'}</b>
+              <span className="mono muted">{clientId ? `clients/${clientId}.json` : 'albo firmę z benchmarku'}</span>
+            </div>
+            {client && <span className={`badge ${dirty ? 'amber' : 'signal'}`}>{dirty ? 'niezapisane' : 'zapisano'}</span>}
+            <button className="btn secondary sm" disabled={!dirty || !client} onClick={save}>Zapisz</button>
+            {clientId && <button className="btn ghost sm" title="Usuń rekord klienta (historia wysyłek zostaje)" onClick={removeClient}>Usuń</button>}
           </div>
-          {attachmentNames.length > 0 && <div className="muted mono">załączniki: {attachmentNames.join(', ')}</div>}
-        </div>
-      </section>
+
+          {client && (
+            <div className="editor-body">
+              <section>
+                <span className="eyebrow">01 — Meta</span>
+                {META.map((k) => field(k, 'meta'))}
+              </section>
+
+              <section>
+                <div className="sec-head"><span className="eyebrow">02 — Pola szablonu</span><span className="mono">{template}</span></div>
+                {fieldKeys.map((k) => field(k, 'tpl'))}
+              </section>
+
+              <section>
+                <div className="sec-head"><span className="eyebrow">03 — Załączniki</span><span className="mono muted">{customer ? `customers/${customer}` : 'mailer/uploads'}</span></div>
+                <div>
+                  <label className="btn ghost sm" style={{ cursor: 'pointer' }}>
+                    Dodaj plik z dysku…
+                    <input type="file" accept=".pdf,.png,.jpg,.jpeg" multiple style={{ display: 'none' }}
+                      onChange={(e) => { for (const f of Array.from(e.target.files ?? [])) addUpload(f); e.target.value = ''; }} />
+                  </label>
+                </div>
+                {uploads.map((f) => (
+                  <label key={f.name} className="check">
+                    <input type="checkbox" checked readOnly onChange={() => setUploads((u) => u.filter((x) => x !== f))} />
+                    <span className="mono">{f.name} <em className="muted">· z dysku, tylko do tej wysyłki</em></span>
+                  </label>
+                ))}
+                {files.length === 0 && uploads.length === 0 && <span className="hint">Brak plików — dodaj z dysku{customer && ` albo wrzuć PDF do customers/${customer}/`}.</span>}
+                {files.map((f) => (
+                  <label key={f} className="check">
+                    <input type="checkbox" checked={(vars.attachments ?? []).includes(f)} onChange={() => toggleAttachment(f)} />
+                    <span className="mono">{customer ? f.replace(`customers/${customer}/`, '') : f}</span>
+                  </label>
+                ))}
+              </section>
+
+              <section>
+                <span className="eyebrow">04 — Notatki</span>
+                <textarea className="input" value={str(client.notes)} onChange={(e) => { setClient({ ...client, notes: e.target.value }); setDirty(true); }} />
+              </section>
+            </div>
+          )}
+        </main>
+
+        {/* PRAWA: podgląd + wysyłka */}
+        <section className="col preview-col">
+          <div className="preview-head">
+            <div className="tabs" role="tablist">
+              <button className={`tab ${tab === 'html' ? 'active' : ''}`} role="tab" onClick={() => setTab('html')}>HTML</button>
+              <button className={`tab ${tab === 'text' ? 'active' : ''}`} role="tab" onClick={() => setTab('text')}>Tekst</button>
+            </div>
+            {rendered && rendered.leftovers.length > 0
+              ? <span className="badge amber" title={rendered.leftovers.join(' ')}>niewypełnione: {rendered.leftovers.length}</span>
+              : <span className="mono muted">podgląd · 600 px</span>}
+          </div>
+          <div className="preview">
+            {!rendered ? <div className="placeholder">Podgląd pojawi się po wybraniu klienta.</div>
+              : tab === 'html' ? <iframe title="podgląd" sandbox="" srcDoc={rendered.html} />
+              : <div className="text"><pre>{rendered.text}</pre></div>}
+          </div>
+          <div className="sendbar">
+            {notice && <div className={`notice ${notice.kind}`}>{notice.text}</div>}
+            {rendered?.blocked && <div className="notice err">Wysyłka zablokowana: {rendered.blocked}</div>}
+            {rendered && rendered.leftovers.length > 0 && <div className="notice warn">Niewypełnione: {rendered.leftovers.join(' ')}</div>}
+            <div className="subject"><span className="eyebrow">Temat</span><span>{vars.subject || <span className="muted">brak tematu</span>}</span></div>
+            <div className="row">
+              <button className="btn ghost" disabled={!canSend || busy || !sender?.testTo} onClick={() => send('test')} title={sender?.testTo ? `na ${sender.testTo}` : 'brak TEST_TO w mailer/.env'}>
+                {busy ? 'Wysyłam…' : 'Wyślij test'}
+              </button>
+              <div className="to-field grow">
+                <span className="prefix">do:</span>
+                <input className="input" type="text" placeholder={str(vars.to) || 'adres klienta'} value={toOverride} onChange={(e) => setToOverride(e.target.value)} />
+              </div>
+              <button className="btn primary" disabled={!canSend || busy || !finalTo || !customer} onClick={() => { setConfirmText(''); setResend(false); setConfirmOpen(true); }}>
+                Wyślij do klienta <span className="arrow" aria-hidden>→</span>
+              </button>
+            </div>
+            {attachmentNames.length > 0 && <div className="mono muted">załączniki: {attachmentNames.join(', ')}</div>}
+          </div>
+        </section>
+      </div>
 
       {confirmOpen && (
         <div className="dialog" onClick={() => !busy && setConfirmOpen(false)}>
           <div onClick={(e) => e.stopPropagation()}>
-            <strong>Wysyłka do klienta</strong>
-            <div>Mail „{template}” pójdzie od <b>{fromLabel}</b> na <b>{finalTo}</b>. Zostanie zapisany w Wysłane i zalogowany w customers/{customer}/mailer-log.txt.{dirty && <> <b>Rekord ma niezapisane zmiany</b> — wysyłka użyje ich, ale zapisz po wysyłce.</>}</div>
+            <h3>Wysyłka do klienta</h3>
+            <div>Mail <span className="badge">{template}</span> pójdzie od <b>{fromLabel}</b> na <b>{finalTo}</b>. Zostanie zapisany w Wysłane i zalogowany w customers/{customer}/mailer-log.txt.{dirty && <> <b>Rekord ma niezapisane zmiany</b> — wysyłka użyje ich, ale zapisz po wysyłce.</>}</div>
             <div>Załączniki: {attachmentNames.length ? <b>{attachmentNames.join(', ')}</b> : <b>brak</b>}</div>
             {alreadySent.length > 0 && (
               <div className="notice warn">
                 „{template}” już poszedł do {customer}: {alreadySent.join(', ')}.
-                <label className="row" style={{ gap: 6, marginTop: 6 }}><input type="checkbox" style={{ width: 'auto' }} checked={resend} onChange={(e) => setResend(e.target.checked)} /> wyślij ponownie (celowo)</label>
+                <label className="check" style={{ marginTop: 8 }}><input type="checkbox" checked={resend} onChange={(e) => setResend(e.target.checked)} /> wyślij ponownie (celowo)</label>
               </div>
             )}
             <div>Żeby potwierdzić, wpisz domenę klienta: <span className="mono">{customer}</span></div>
-            <input type="text" value={confirmText} onChange={(e) => setConfirmText(e.target.value)} autoFocus onKeyDown={(e) => e.key === 'Enter' && !busy && !sendBlocked && confirmText.trim().toLowerCase() === customer.toLowerCase() && send('really')} />
+            <input className="input" type="text" value={confirmText} onChange={(e) => setConfirmText(e.target.value)} autoFocus onKeyDown={(e) => e.key === 'Enter' && !busy && !sendBlocked && confirmText.trim().toLowerCase() === customer.toLowerCase() && send('really')} />
             <div className="row" style={{ justifyContent: 'flex-end' }}>
-              <button className="btn" disabled={busy} onClick={() => setConfirmOpen(false)}>Anuluj</button>
+              <button className="btn ghost" disabled={busy} onClick={() => setConfirmOpen(false)}>Anuluj</button>
               <button className="btn danger" disabled={busy || sendBlocked || confirmText.trim().toLowerCase() !== customer.toLowerCase()} onClick={() => send('really')}>
                 {busy ? 'Wysyłam…' : 'Wyślij naprawdę'}
               </button>
