@@ -37,6 +37,7 @@ const PL_LABELS: Record<string, string> = {
   REPORT_FILE: 'Nazwa pliku raportu PDF (jak w załączniku)',
   OFFER_FILE: 'Nazwa pliku oferty PDF (jak w załączniku)',
   TABLE_TITLE: 'Tytuł tabeli z cenami',
+  HEADLINE: 'Nagłówek H1 maila (po angielsku, może zawierać [PLACEHOLDERY]; w cold-mail kończy go stałe «Yet.», w cold-mail-listed «For now.», w follow-up «Free.»)',
   LISTED: 'Czy firma jest na listach AI wg testu G2: yes / no (musi pasować do szablonu, inaczej wysyłka jest zablokowana)',
   'LIST RESULT': 'Wynik na listach AI, po «[COMPANY]», z kropką (np. «was not on any of the lists.») — szablon cold-mail, bez wartości domyślnej',
   'AI SOURCE': 'Skąd AI bierze wiedzę / dlaczego nie poleca, po «but» (np. «it relies on third-party sources, not on your website») — szablon cold-mail, bez wartości domyślnej',

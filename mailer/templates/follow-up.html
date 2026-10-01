@@ -1,50 +1,103 @@
-<!-- AppSynth follow-up v4 (2026-09-28): English only, krótka przypominajka kilka dni po cold mailu. [COUNT] = liczba firm z wynikiem w fali benchmarku dla branży. [AI RESULT] = całe zdanie o wyniku na listach AI, z kropką (bez domyślnej wartości — firma na liście i spoza listy mają inny wynik). -->
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f6faf7;margin:0;padding:0;">
-<tr><td align="center" style="padding:24px 12px;">
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#ffffff;border:1px solid #d8e8de;border-radius:14px;">
+<!-- AppSynth follow-up v5 (2026-10-01): design system appsynth.pl. English only, krótka przypominajka kilka dni po cold mailu. [COUNT] = liczba firm z wynikiem w fali benchmarku dla branży. [AI RESULT] = całe zdanie o wyniku na listach AI, z kropką (bez domyślnej wartości). [HEADLINE] domyślny w defaults.json. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
+<title>Your AI visibility report — [company.no]</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; padding:0; background:#f6f5f0; }
+  a { color:#111512; }
+  @media (max-width:620px) {
+    .wrap { width:100% !important; }
+    .pad { padding-left:24px !important; padding-right:24px !important; }
+    .stack { display:block !important; width:100% !important; }
+    .stack-gap { padding-top:16px !important; padding-left:0 !important; }
+    .h1 { font-size:26px !important; line-height:32px !important; }
+  }
+</style>
+</head>
+<body style="margin:0;padding:0;background:#f6f5f0;">
+<div class="preheader" style="display:none;max-height:0;overflow:hidden;opacity:0;">The report for [company.no] is ready: 35 tests, what is missing, what to fix first. Free, no strings attached.</div>
 
-<!-- header -->
-<tr><td style="padding:22px 32px 18px 32px;border-bottom:1px solid #eaf4ee;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin:0;border-collapse:collapse;"><tr>
-    <td valign="middle" align="left" style="text-align:left;white-space:nowrap;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;"><a href="https://appsynth.pl" style="text-decoration:none;"><span style="display:inline-block;vertical-align:middle;font-size:18px;font-weight:800;color:#086633;letter-spacing:.01em;">AppSynth</span></a></td>
-    <td valign="middle" align="right" style="text-align:right;white-space:nowrap;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;color:#7a9486;">AI-native software engineering</td>
-  </tr></table>
-</td></tr>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f6f5f0;">
+<tr><td align="center" style="padding:32px 12px;">
 
-<!-- body -->
-<tr><td align="left" style="text-align:left;padding:28px 32px 8px 32px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#12271c;">
-  <p align="left" style="text-align:left;margin:0 0 16px 0;">Hi [FIRST NAME],</p>
-  <p align="left" style="text-align:left;margin:0 0 16px 0;">a few days ago I sent a short e-mail to [FIRST ADDRESS] about what ChatGPT, Gemini and Perplexity answer when asked about [SERVICE] in [CITY]: [AI RESULT] I know inboxes fill up fast, hence this short follow-up.</p>
-  <!-- score card -->
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin:20px 0;background:#f6faf7;border:1px solid #d8e8de;border-radius:12px;">
-    <tr>
-      <td width="50%" align="center" style="padding:18px 12px;border-right:1px solid #d8e8de;">
-        <div style="font-size:34px;font-weight:800;color:#dc2626;line-height:1.1;">[57]<span style="font-size:16px;color:#7a9486;font-weight:600;">/100</span></div>
-        <div style="font-size:12px;color:#648271;margin-top:6px;">[company.no] — AI Readiness Score</div>
+<table role="presentation" class="wrap" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;background:#ffffff;border:1px solid #dcdad0;border-radius:16px;border-collapse:separate;font-family:Geist,ui-sans-serif,system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;color:#111512;">
+
+  <!-- Header -->
+  <tr><td class="pad" style="padding:24px 40px;border-bottom:1px solid #dcdad0;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+      <td valign="middle" style="width:28px;"><img src="https://appsynth.pl/logo-nav.png" width="28" height="28" alt="" style="display:block;border:0;"></td>
+      <td valign="middle" style="padding-left:10px;font-size:18px;font-weight:600;letter-spacing:-0.03em;color:#111512;"><a href="https://appsynth.pl" style="color:#111512;text-decoration:none;">AppSynth</a></td>
+      <td valign="middle" align="right" style="font-family:'Geist Mono',ui-monospace,Menlo,Consolas,monospace;font-size:11px;line-height:16px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:#5b615a;">AI visibility audit</td>
+    </tr></table>
+  </td></tr>
+
+  <!-- Opening -->
+  <tr><td class="pad" style="padding:36px 40px 0;">
+    <div style="font-family:'Geist Mono',ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:16px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:#5b615a;">[company.no] — follow-up</div>
+    <h1 class="h1" style="margin:12px 0 0;font-size:30px;line-height:36px;font-weight:600;letter-spacing:-0.03em;color:#111512;">[HEADLINE] <span style="background:#7ac29b;color:#111512;padding:0 4px;border-radius:4px;">Free.</span></h1>
+    <p style="margin:24px 0 0;font-size:16px;line-height:24px;">Hi [FIRST NAME],</p>
+    <p style="margin:16px 0 0;font-size:16px;line-height:24px;">a few days ago I sent a short e-mail to [FIRST ADDRESS] about what ChatGPT, Gemini and Perplexity answer when asked about [SERVICE] in [CITY]: <strong>[AI RESULT]</strong> I know inboxes fill up fast, hence this short follow-up.</p>
+  </td></tr>
+
+  <!-- Score panel -->
+  <tr><td class="pad" style="padding:32px 40px 0;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#141a16;border-radius:16px;border-collapse:separate;">
+      <tr><td style="padding:28px 28px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+          <td class="stack" valign="top" width="50%" style="width:50%;">
+            <div style="font-family:'Geist Mono',ui-monospace,Menlo,Consolas,monospace;font-size:11px;line-height:16px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:#a3aba2;">AI Readiness Score</div>
+            <div style="margin-top:8px;font-family:'Geist Mono',ui-monospace,Menlo,Consolas,monospace;font-weight:500;letter-spacing:-0.04em;color:#ff6b4a;"><span style="font-size:56px;line-height:56px;">[57]</span><span style="font-size:18px;color:#a3aba2;letter-spacing:0;">/100</span></div>
+            <div style="margin-top:6px;font-size:14px;line-height:20px;color:#a3aba2;">[company.no]</div>
+          </td>
+          <td class="stack stack-gap" valign="top" width="50%" style="width:50%;padding-left:24px;">
+            <div style="font-family:'Geist Mono',ui-monospace,Menlo,Consolas,monospace;font-size:11px;line-height:16px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:#a3aba2;">Median, [TRADE] NO</div>
+            <div style="margin-top:8px;font-family:'Geist Mono',ui-monospace,Menlo,Consolas,monospace;font-weight:500;letter-spacing:-0.04em;color:#f6f5f0;"><span style="font-size:56px;line-height:56px;">[70]</span><span style="font-size:18px;color:#a3aba2;letter-spacing:0;">/100</span></div>
+            <div style="margin-top:6px;font-size:14px;line-height:20px;color:#a3aba2;">[COUNT] companies measured</div>
+          </td>
+        </tr></table>
+      </td></tr>
+    </table>
+  </td></tr>
+
+  <!-- Report + CTA -->
+  <tr><td class="pad" style="padding:32px 40px 0;">
+    <p style="margin:0;font-size:16px;line-height:24px;">The report for [company.no] is ready: 35 tests, what is missing, and what is worth fixing first. It’s free and no strings attached — I’ll send it as a PDF if you reply “yes” to this e-mail or click below.</p>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:20px;"><tr>
+      <td style="background:#7ac29b;border-radius:9999px;">
+        <a href="mailto:sylwia@appsynth.pl?subject=Yes%20-%20report%20for%20[company.no]" style="display:inline-block;padding:13px 24px;font-size:15px;line-height:20px;font-weight:600;color:#111512;text-decoration:none;">Yes, send me the report</a>
       </td>
-      <td width="50%" align="center" style="padding:18px 12px;">
-        <div style="font-size:34px;font-weight:800;color:#086633;line-height:1.1;">[70]<span style="font-size:16px;color:#7a9486;font-weight:600;">/100</span></div>
-        <div style="font-size:12px;color:#648271;margin-top:6px;">median, [TRADE] in Norway ([COUNT] companies)</div>
-      </td>
-    </tr>
-  </table>
-  <p align="left" style="text-align:left;margin:0 0 16px 0;">The report for [company.no] is ready: 35 tests, what is missing, and what is worth fixing first. It's free and no strings attached — I'll send it as a PDF if you reply "yes" to this e-mail.</p>
-  <p align="left" style="text-align:left;margin:0 0 8px 0;">And if this isn't relevant for you right now, just say so — I won't bother you again.</p>
-</td></tr>
+    </tr></table>
+    <p style="margin:24px 0 0;font-size:16px;line-height:24px;color:#5b615a;">And if this isn’t relevant for you right now, just say so — I won’t bother you again.</p>
+  </td></tr>
 
-<!-- signature -->
-<tr><td align="left" style="text-align:left;padding:8px 32px 28px 32px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;color:#4a6355;">
-  Best regards,<br>
-  <strong style="color:#12271c;">Sylwia Zabłocka</strong><br>
-  Co-owner, AppSynth — AI-native software engineering<br>
-  <a href="https://appsynth.pl" style="color:#086633;text-decoration:none;">appsynth.pl</a> &nbsp;·&nbsp; <a href="mailto:sylwia@appsynth.pl" style="color:#086633;text-decoration:none;">sylwia@appsynth.pl</a> &nbsp;·&nbsp; <a href="https://www.linkedin.com/in/sylwia-zab%C5%82ocka-572998123" style="color:#086633;text-decoration:none;">LinkedIn</a>
-</td></tr>
+  <!-- Signature -->
+  <tr><td class="pad" style="padding:36px 40px 32px;">
+    <p style="margin:0;font-size:15px;line-height:22px;color:#5b615a;">Best regards,</p>
+    <p style="margin:4px 0 0;font-size:16px;line-height:24px;font-weight:600;color:#111512;">Sylwia Zabłocka</p>
+    <p style="margin:0;font-size:14px;line-height:20px;color:#5b615a;">Co-owner, AppSynth</p>
+    <p style="margin:8px 0 0;font-size:14px;line-height:20px;">
+      <a href="https://appsynth.pl" style="color:#111512;text-decoration:underline;text-decoration-color:#7ac29b;text-decoration-thickness:2px;text-underline-offset:3px;">appsynth.pl</a>
+      <span style="color:#dcdad0;">&nbsp;·&nbsp;</span>
+      <a href="mailto:sylwia@appsynth.pl" style="color:#111512;text-decoration:underline;text-decoration-color:#7ac29b;text-decoration-thickness:2px;text-underline-offset:3px;">sylwia@appsynth.pl</a>
+      <span style="color:#dcdad0;">&nbsp;·&nbsp;</span>
+      <a href="https://www.linkedin.com/in/sylwia-zab%C5%82ocka-572998123" style="color:#111512;text-decoration:underline;text-decoration-color:#7ac29b;text-decoration-thickness:2px;text-underline-offset:3px;">LinkedIn</a>
+    </p>
+  </td></tr>
 
-<!-- footer -->
-<tr><td align="left" style="text-align:left;padding:14px 32px;background:#f6faf7;border-top:1px solid #eaf4ee;border-radius:0 0 14px 14px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:11px;line-height:1.5;color:#7a9486;">
-  AppSynth · appsynth.pl · We measure, we don't promise. &nbsp;|&nbsp; Not interested? Reply "no thanks" and you won't hear from us again.
-</td></tr>
+  <!-- Footer -->
+  <tr><td class="pad" style="padding:20px 40px;border-top:1px solid #dcdad0;background:#f6f5f0;border-radius:0 0 16px 16px;">
+    <p style="margin:0;font-family:'Geist Mono',ui-monospace,Menlo,Consolas,monospace;font-size:11px;line-height:16px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:#5b615a;">We measure. We don’t promise.</p>
+    <p style="margin:6px 0 0;font-size:13px;line-height:20px;color:#5b615a;">AppSynth · appsynth.pl · AI-native software engineering<br>Not interested? Reply “no thanks” and you won’t hear from us again.</p>
+  </td></tr>
 
 </table>
 </td></tr>
 </table>
+</body>
+</html>

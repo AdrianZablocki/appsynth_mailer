@@ -18,6 +18,6 @@ export function render(template: string, vars: Vars) {
   // placeholdery szablonu, które zostały w treści (też małymi literami, np. [company.no]) + ogólny wzorzec [WIELKIE]
   const fromTemplate = placeholders(body).filter((k) => !META_KEYS.has(k) && html.includes(`[${k}]`)).map((k) => `[${k}]`);
   const leftovers = [...new Set([...fromTemplate, ...(html.match(/\[[A-ZÆØÅ0-9][^\]\n]{0,140}\]/g) ?? [])])];
-  const text = htmlToText(html, { wordwrap: 78, selectors: [{ selector: 'a', options: { hideLinkHrefIfSameAsText: true } }] });
+  const text = htmlToText(html, { wordwrap: 78, selectors: [{ selector: 'a', options: { hideLinkHrefIfSameAsText: true } }, { selector: '.preheader', format: 'skip' }, { selector: 'img', format: 'skip' }, { selector: 'h1', options: { uppercase: false } }] });
   return { html, text, leftovers };
 }

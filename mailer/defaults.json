@@ -1,19 +1,23 @@
 {
-  "_comment": "Wartości domyślne per szablon. Klucz = placeholder; 'subject' może używać [PLACEHOLDERÓW] z rekordu klienta. Rekord klienta (clients/<domena>.json) nadpisuje wszystko; jego sekcja templates.<szablon> nadpisuje rekord. Od 2026-09-24 wszystko po angielsku. Od 2026-09-28 bez domyślnych zdań o wyniku na listach AI (LIST RESULT, AI SOURCE, PLACE, AI RESULT) — każdy klient wpisuje je sam, a LISTED (yes/no) musi pasować do szablonu.",
+  "_comment": "Wartości domyślne per szablon. Klucz = placeholder; 'subject' może używać [PLACEHOLDERÓW] z rekordu klienta. Rekord klienta (clients/<domena>.json) nadpisuje wszystko; jego sekcja templates.<szablon> nadpisuje rekord. Od 2026-09-24 wszystko po angielsku. Od 2026-09-28 bez domyślnych zdań o wyniku na listach AI (LIST RESULT, AI SOURCE, PLACE, AI RESULT) — każdy klient wpisuje je sam, a LISTED (yes/no) musi pasować do szablonu. Od 2026-10-01 szablony w design systemie appsynth.pl; HEADLINE = nagłówek H1 maila (może zawierać inne placeholdery), po nim w cold-mail stałe podświetlone «Yet.», w cold-mail-listed «For now.», w follow-up «Free.».",
   "cold-mail": {
-    "subject": "We asked AI who it recommends for [SERVICE] in [CITY]. [COMPANY] wasn't on the list."
+    "subject": "We asked AI who it recommends for [SERVICE] in [CITY]. [COMPANY] wasn't on the list.",
+    "HEADLINE": "AI recommends [TRADE] in [CITY]. Not [COMPANY]."
   },
   "cold-mail-listed": {
-    "subject": "We asked AI who it recommends for [SERVICE] in [CITY]. [COMPANY] came last."
+    "subject": "We asked AI who it recommends for [SERVICE] in [CITY]. [COMPANY] came last.",
+    "HEADLINE": "AI names [COMPANY] — last."
   },
   "follow-up": {
-    "subject": "Re: We asked AI who it recommends for [SERVICE] in [CITY]"
+    "subject": "Re: We asked AI who it recommends for [SERVICE] in [CITY]",
+    "HEADLINE": "Your AI visibility report is ready."
   },
   "offer": {
     "subject": "Report and offer: AI visibility for [COMPANY]",
     "TABLE_TITLE": "What we offer · prices excl. VAT",
     "PRICE_AUDIT": "4 900",
     "PRICE_PACKAGE": "12 900",
-    "PRICE_MONTHLY": "1 900"
+    "PRICE_MONTHLY": "1 900",
+    "HEADLINE": "Report and offer for [company.no]."
   }
 }

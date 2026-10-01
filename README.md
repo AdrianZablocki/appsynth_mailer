@@ -50,6 +50,11 @@ Zasady:
 branżą, wynikiem, medianą branży, liczbą firm w fali (`COUNT`) i 3 najkosztowniejszymi niezaliczonymi checkami (mapa w `src/lib/benchmark.ts`).
 **Od 2026-09-24 szablony i tematy są wyłącznie po angielsku** (decyzja Adriana: cała komunikacja z klientami po angielsku; norweski tylko na stronie i w pytaniach testów G). Klucze rekordu: `FIRST NAME`, `COMPANY`, `company.no`, `SERVICE`, `CITY`, `TRADE`, `COUNT`, `57`, `70`, `COMPETITOR 1–3`, `AI OBSERVATION`, `FINDING 1–3`; follow-up: `FIRST ADDRESS`; listed: `PLACE`, `AI REMARK`; oferta: `REPORT_FILE`, `OFFER_FILE`, `VALID_UNTIL`, `PROPOSED_TIME`, `TABLE_TITLE`, `PRICE_*`.
 Imię, adres, konkurentów i obserwację AI uzupełniasz po ręcznych testach G.
+**Od 2026-10-01 szablony są w design systemie appsynth.pl** (Geist / Geist Mono, tło `#f6f5f0`, tekst `#111512`, akcent `#7ac29b`,
+ciemny panel wyniku `#141a16`, logo z `https://appsynth.pl/logo-nav.png`): pełne dokumenty HTML z `<style>` na układ mobilny,
+H1 = placeholder `HEADLINE` (domyślny per szablon w `defaults.json`, może zawierać inne placeholdery — wartości są podstawiane
+jedną rundą), FINDING 1–3 jako wiersze testów FAIL, CTA jako przycisk `mailto:`. `cold-mail` u firmy z listy (LISTED = yes)
+wymaga własnego tematu, LIST RESULT **i HEADLINE**.
 
 Nadawca: selekt „od:” w nagłówku wybiera alias skrzynki z `FROM_ADDRESSES` w `mailer/.env`
 (`Nazwa <adres>, Nazwa <adres>`; pierwszy = domyślny). Wybór zapisuje się w rekordzie jako `from`

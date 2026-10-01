@@ -39,7 +39,8 @@ export function effectiveVars(client: ClientRecord, template: string, defaults: 
   const o = client.templates?.[template] ?? {};
   const v: Vars = { ...d, ...base, ...o };
   v.attachments = (o.attachments ?? base.attachments ?? d.attachments ?? []) as string[];
-  if (typeof v.subject === 'string') v.subject = fill(v.subject, v);
+  // wartości mogą same zawierać [PLACEHOLDERY] (temat, HEADLINE z defaults.json) — jedna runda podstawień
+  for (const k of Object.keys(v)) if (typeof v[k] === 'string' && (v[k] as string).includes('[')) v[k] = fill(v[k] as string, v);
   return v;
 }
 
@@ -72,9 +73,9 @@ export function listedValue(client: ClientRecord): 'yes' | 'no' | '' {
   return v === 'yes' || v === 'no' ? v : '';
 }
 
-/** cold-mail u firmy z listy jest dopuszczalny tylko z własnym tematem i LIST RESULT (przypadek „1 z 8 odpowiedzi”). */
+/** cold-mail u firmy z listy jest dopuszczalny tylko z własnym tematem, LIST RESULT i HEADLINE (domyślny H1 mówi „Not [COMPANY]”; przypadek „1 z 8 odpowiedzi”). */
 const hasCustomColdMail = (client: ClientRecord) =>
-  !!str(client.templates?.['cold-mail']?.subject).trim() && !!str(client.templates?.['cold-mail']?.['LIST RESULT']).trim();
+  ['subject', 'LIST RESULT', 'HEADLINE'].every((k) => !!str(client.templates?.['cold-mail']?.[k]).trim());
 
 export function listClaimBlock(template: string, client: ClientRecord): string | null {
   if (!LIST_CLAIM_TEMPLATES.has(template)) return null;
@@ -83,7 +84,7 @@ export function listClaimBlock(template: string, client: ClientRecord): string |
   if (template === 'cold-mail-listed' && listed !== 'yes')
     return 'LISTED = no: firmy nie ma na listach AI, a „cold-mail-listed” twierdzi, że jest. Użyj „cold-mail”.';
   if (template === 'cold-mail' && listed === 'yes' && !hasCustomColdMail(client))
-    return 'LISTED = yes: firma jest na listach AI, a „cold-mail” domyślnie mówi, że jej nie ma. Użyj „cold-mail-listed” albo wpisz dla „cold-mail” własny temat i LIST RESULT.';
+    return 'LISTED = yes: firma jest na listach AI, a „cold-mail” domyślnie mówi, że jej nie ma. Użyj „cold-mail-listed” albo wpisz dla „cold-mail” własny temat, LIST RESULT i HEADLINE.';
   return null;
 }
 
